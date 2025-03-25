@@ -30,12 +30,14 @@ include(pico_sdk_import.cmake)
 
 project(raspicodething_rat C CXX ASM)
 
+set(PICO_CXX_ENABLE_EXCEPTIONS 1)
+
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(raspicodething_rat raspicodething_rat.c )
+add_executable(raspicodething_rat raspicodething_rat.cpp )
 
 pico_set_program_name(raspicodething_rat "raspicodething_rat")
 pico_set_program_version(raspicodething_rat "0.1")
