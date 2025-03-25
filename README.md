@@ -9,3 +9,11 @@ Preferably, please write your part in a seperate file of the other groups in ord
 
 # General advice
 Please DONT FORGET TO PUSH YOUR CHANGES. No need to push all the time, but when even a part of your program works correctly, push it. Preferably DONT PUSH broken code, but do what you want since git is for source control, and that is not my issue. If anything is wrong with the git spesifically, please talk to me - Pier
+
+# How I set up the project
+
+To set up the project, I just used the default settings when making a new Pico Project in C/C++, the only things I changed were 
+- Change the board type to Pico 2 W
+- Set the pico wireless options to Pico W onboard LED
+- Generate C++ code (so that the main function isnt in C)
+If you need something changed, please notify me immediately so that i can fix it without having to refactor all of the code. Thank you - Pier
