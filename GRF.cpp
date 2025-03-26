@@ -4,6 +4,7 @@
 #include <vector>
 #include "hardware/i2c.h"
 #include "pico/stdlib.h"
+using namespace std;
 
 //Readout sensor data (IMUs and Honeycomb, >250Hz)
 //Check that the pins are the correct ones we want to use
@@ -86,16 +87,36 @@ typedef struct {
     double mass;
     double shank_length;
     double thigh_length;
-} Runner
+} Runner;
 
 
 //Transforming sensor data (accelerometer xyz and gyrometer xyz) to good inputs for the math
 
 //Math 
-int N = w_shank.size();
-double integrate_theeta(w_shank,theeta_initial, deltatime)
-    for (int i= 0; i<N-1; i++)
-        0.5*(w_shank(i)+w_shank(i+1))*deltatime
-        
-    end    
+//relate w_shank to gyro output
+//Integration with trapezodial rule to obtain theeta_shank
+int N = w_shank[0].size();
+double integrate_wshank(vector<vector<double>> w_shank, vector<vector<double>> theeta_shank_initial,vector<vector<double>> theeta_shank,double deltatime){
+    vector<vector<double>> theeta_shank(3, vector<double>(N, theeta_shank_initial));
+    for (int j=0; j<3; j++){
+        for (int i= 0; i<N; i++){
+            theeta_shank[j][i] = theeta_shank[j][i-1] + 0.5*(w_shank[j][i]+w_shank[j][i+1])*deltatime;
+        }   
+    }
+    return theeta_shank; //do i need [][]?
+}
+//relate a_shank to accelerometer output 
+//Integration with trapezodial rule to obtain v_shank
+int N = a_shank[0].size();
+double integrate_ashank(vector<vector<double>> a_shank, vector<vector<double>> v_shank_initial,vector<vector<double>> v_shank,double deltatime){
+    vector<vector<double>> v_shank(3, vector<double>(N, v_shank_initial));
+    for (int j=0; j<3; j++){
+        for (int i= 0; i<N; i++){
+            v_shank[j][i] = v_shank[j][i-1] + 0.5*(a_shank[j][i]+a_shank[j][i+1])*deltatime;
+        }   
+    }
+    return v_shank; //do i need [][]?
+}
+
+//Calculate L_IMU
 
