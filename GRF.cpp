@@ -93,7 +93,7 @@ typedef struct {
 //Transforming sensor data (accelerometer xyz and gyrometer xyz) to good inputs for the math
 
 //Math 
-//relate w_shank to gyro output
+//relate w_shank to gyro output and a_shank to accelerometer output 
 //Integration with trapezodial rule to obtain theeta_shank
 //Calculate L_shank
 int N = w_shank[0].size();
@@ -104,26 +104,20 @@ double integrate_wshank(vector<vector<double>> w_shank, vector<vector<double>> t
     vector<vector<double>> L_shank[2]=shank_length*cos(theeta_shank_initial[2][N]);
     for (int j=0; j<3; j++){
         for (int i= 0; i<N; i++){
-            theeta_shank[j][i] = theeta_shank[j][i-1] + 0.5*(w_shank[j][i]+w_shank[j][i+1])*deltatime;
+            theeta_shank[j][i] = theeta_shank[j][i] + 0.5*(w_shank[j][i]+w_shank[j][i+1])*deltatime;
         }   
         return theeta_shank;
-        L_shank[0]=shank_length*sin(theeta_shank[0][N]);
-        L_shank[1]=0;
-        L_shank[2]=shank_length*cos(theeta_shank[2][N]);
+        L_shank[0][i]=shank_length*sin(theeta_shank[0][N]);
+        L_shank[1][i]=0;
+        L_shank[2][i]=shank_length*cos(theeta_shank[2][N]);
     }
     return L_shank;
 }
-//relate a_shank to accelerometer output 
-//Integration with trapezodial rule to obtain v_shank
-int N = a_shank[0].size();
-double integrate_ashank(vector<vector<double>> a_shank, vector<vector<double>> v_shank_initial,vector<vector<double>> v_shank,double deltatime){
-    vector<vector<double>> v_shank(3, vector<double>(N, v_shank_initial));
-    for (int j=0; j<3; j++){
-        for (int i= 0; i<N; i++){
-            v_shank[j][i] = v_shank[j][i-1] + 0.5*(a_shank[j][i]+a_shank[j][i+1])*deltatime;
-        }   
-    }
-    return v_shank; //do i need [][]?
-}
 
+
+//Knee Velocity
+
+double vknee(vector<vector<double>> v_shank, vector<vector<double>> w_shank, vector<vector<double>> L_shank){
+
+}
 
