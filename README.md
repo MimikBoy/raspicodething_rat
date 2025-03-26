@@ -17,3 +17,5 @@ To set up the project, I just used the default settings when making a new Pico P
 - Set the pico wireless options to Pico W onboard LED
 - Generate C++ code (so that the main function isnt in C)
 If you need something changed, please notify me immediately so that i can fix it without having to refactor all of the code. Thank you - Pier
+
+Times read counter, please increment the following number if you have read this document: 1
