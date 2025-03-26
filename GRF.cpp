@@ -118,5 +118,7 @@ double integrate_ashank(vector<vector<double>> a_shank, vector<vector<double>> v
     return v_shank; //do i need [][]?
 }
 
-//Calculate L_IMU
-
+//Calculate L_shank
+double L_shank(vector<vector<double>>theeta_shank, double shank_length){
+    
+}
