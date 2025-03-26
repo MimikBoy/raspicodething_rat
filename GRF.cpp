@@ -95,15 +95,23 @@ typedef struct {
 //Math 
 //relate w_shank to gyro output
 //Integration with trapezodial rule to obtain theeta_shank
+//Calculate L_shank
 int N = w_shank[0].size();
 double integrate_wshank(vector<vector<double>> w_shank, vector<vector<double>> theeta_shank_initial,vector<vector<double>> theeta_shank,double deltatime){
     vector<vector<double>> theeta_shank(3, vector<double>(N, theeta_shank_initial));
+    vector<vector<double>> L_shank[0]=shank_length*sin(theeta_shank_initial[0][N]);
+    vector<vector<double>> L_shank[1]=0;
+    vector<vector<double>> L_shank[2]=shank_length*cos(theeta_shank_initial[2][N]);
     for (int j=0; j<3; j++){
         for (int i= 0; i<N; i++){
             theeta_shank[j][i] = theeta_shank[j][i-1] + 0.5*(w_shank[j][i]+w_shank[j][i+1])*deltatime;
         }   
+        return theeta_shank;
+        L_shank[0]=shank_length*sin(theeta_shank[0][N]);
+        L_shank[1]=0;
+        L_shank[2]=shank_length*cos(theeta_shank[2][N]);
     }
-    return theeta_shank; //do i need [][]?
+    return L_shank;
 }
 //relate a_shank to accelerometer output 
 //Integration with trapezodial rule to obtain v_shank
@@ -118,7 +126,4 @@ double integrate_ashank(vector<vector<double>> a_shank, vector<vector<double>> v
     return v_shank; //do i need [][]?
 }
 
-//Calculate L_shank
-double L_shank(vector<vector<double>>theeta_shank, double shank_length){
-    
-}
+
