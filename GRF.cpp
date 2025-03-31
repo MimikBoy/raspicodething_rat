@@ -34,7 +34,7 @@ struct SensorData {
     float angle_x;
     float angle_y;
     float angle_z;
-};
+}data;
 
 
 // Function to compute the length vectors for shank and thigh
@@ -66,7 +66,7 @@ void calculate_kinematics(SensorData &data, float &velocity_shank_x, float &velo
 
     // Calculate length vectors for shank and thigh
     float L_shank_x, L_shank_z, L_thigh_x, L_thigh_z;
-    calculate_length_vectors(theta_shank, theta_thigh, L_shank_x, L_shank_z, L_thigh_x, L_thigh_z);
+    calculate_length_vectors(theta_shank_x, theta_thigh_x, L_shank_x, L_shank_z, L_thigh_x, L_thigh_z);
 
     // Integrate acceleration to get velocity of the IMU
     integrate(velocity_IMU_x, velocity_IMU_y, velocity_IMU_z, data, dt);
@@ -148,6 +148,13 @@ int main() {
     float velocity_IMU_x = 0.0f, velocity_IMU_y = 0.0f, velocity_IMU_z = 0.0f;
     float velocity_knee_x = 0.0f, velocity_knee_y = 0.0f, velocity_knee_z = 0.0f;
     float velocity_hip_x = 0.0f, velocity_hip_y = 0.0f, velocity_hip_z = 0.0f;
+    vector<float> w_thigh = {0,0,0};
+
+    // Initialize acceleration variables
+    vector<float> a_shank = {0,0,0};
+    vector<float> a_hip = {0,0,0};
+    vector<float> a_thigh = {0,0,0};
+    vector <float> acc = {0,0,0};
     
     // Initialize pre variables (not the most efficient way but... :)
     float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
@@ -163,7 +170,7 @@ int main() {
     float pre_velocity_hip_x = 0.00f;
     float pre_velocity_hip_y = 0.00f;
     float pre_velocity_hip_z = 0.00f;
-    vector <float> acc = {0,0,0};
+    
     while (true) {
         // Read sensor data
         if (IMU.getSensorEvent() == true){
@@ -227,11 +234,8 @@ int main() {
     
         std::cout << "GRF: " << F_ground << " N" << std::endl;
         }         
-
         // Calculate GRF
-        float a_shank = sqrt(velocity_shank_x * velocity_shank_x + velocity_shank_y * velocity_shank_y);
-        float a_thigh = sqrt(velocity_thigh_x * velocity_thigh_x + velocity_thigh_y * velocity_thigh_y);
-        calculate_grf(m * 0.057f, m * 0.1416f, a_shank, a_thigh, 9.81f);  // Using 9.81m/s^2 for gravity
+        calculate_grf(m * COM_shank, m * COM_thigh, a_shank, a_thigh, a_hip, 9.81f);  // Using 9.81m/s^2 for gravity
 
         sleep_ms(4);  // Sleep 4 mili sec until next sample to be taken
     }
@@ -239,11 +243,6 @@ int main() {
     return 0;
 }
 
-//a_shank, a_thigh, a_hip, w_thigh 
 //Make sure pins match datasheet
-//how much sleep time between samples? 
-//not sure how to write the communication between raspberry pies here to do the sum
-//how to match time instants between raspberry pies
-//COM creo que no es un input sino que lo definimos nosotros? 
-//Assuming 0.1 degree per unit Not sure how much we need
 //Calibration?
+//Axis in cross product and variables in general
