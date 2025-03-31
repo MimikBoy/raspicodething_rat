@@ -55,9 +55,15 @@ target_include_directories(raspicodething_rat PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
 )
 
+add_subdirectory(
+    BNO08x_Pico_Library
+)
+
 # Add any user requested libraries
 target_link_libraries(raspicodething_rat 
         pico_cyw43_arch_none
+        main
+        BNO08x_Pico_Library
         )
 
 pico_add_extra_outputs(raspicodething_rat)
