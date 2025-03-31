@@ -20,6 +20,7 @@ using namespace std;
 // Constants
 const float COM_shank = 0.5726;  // Values taken from paper in Zotero
 const float COM_thigh = 0.4095; 
+float L_shank, L_thigh, m; // Defined by user (lower in the code)
 
 struct SensorData {
     float accel_x;
@@ -110,7 +111,7 @@ void calculate_kinematics(SensorData &data, float &velocity_shank_x, float &velo
     differentiate_velocity(theta_shank_x)
 
     // Calculate the velocity of the shank, knee, thigh and hip with cross product approximation
-    velocity_shank_x = velocity_IMU_x + data.gyro_z * L_shank_x * COM_shank;
+    velocity_shank_x = velocity_IMU_x + data.gyro_y * L_shank_z * COM_shank;
     velocity_shank_y = velocity_IMU_y + data.gyro_z * L_shank_x * COM_shank;
     velocity_shank_z = velocity_IMU_z + data.gyro_z * L_shank_z * COM_shank; 
 
@@ -156,7 +157,6 @@ int main() {
     init_i2c();  // Initialize I2C communication
 
     // User input
-    float L_shank, L_thigh, m;
     std::cin >> L_shank;
     std::cout << "Enter the Length of Thigh (L_thigh) in meters: ";
     std::cin >> L_thigh;
