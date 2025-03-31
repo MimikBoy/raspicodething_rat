@@ -104,22 +104,13 @@ void integrate(float &velocity_x, float &velocity_y, float &velocity_z, const Se
     velocity_z += accel_data.accel_z * dt;
 }
 
-// Function to differentiate velocity to get acceleration
+// Function to differentiate 
 void differentiate(float x, float y, float z, float pre_x, float pre_y, float pre_z,
     float dt, vector<float> &acc) {
     
     acc[0] += (pre_x - x) / dt;
     acc[1] += (pre_y - y) / dt;
     acc[2] += (pre_z - z) / dt;
-}
-
-// Function to compute Ground Reaction Force
-void calculate_grf(float m_shank, float m_thigh, float a_shank, float a_thigh, float g) {
-    float F_shank = m_shank * (a_shank - g);
-    float F_thigh = m_thigh * (a_thigh - g);
-    float F_ground = F_shank + F_thigh;
-    
-    std::cout << "GRF: " << F_ground << " N" << std::endl;
 }
 
 int main() {
@@ -157,16 +148,21 @@ int main() {
     float velocity_IMU_x = 0.0f, velocity_IMU_y = 0.0f, velocity_IMU_z = 0.0f;
     float velocity_knee_x = 0.0f, velocity_knee_y = 0.0f, velocity_knee_z = 0.0f;
     float velocity_hip_x = 0.0f, velocity_hip_y = 0.0f, velocity_hip_z = 0.0f;
-
+    
+    // Initialize pre variables (not the most efficient way but... :)
     float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
-    float pre_gyroX = 0.00f;
-    float pre_gyroY = 0.00f;
-    float pre_gyroZ = 0.00f;
-    float pre_accX = 0.00f;
-    float pre_accY = 0.00f;
-    float pre_accZ = 0.00f;
-    float pre_yaw = 0.00f;
-    float pre_pitch = 0.00f;
+    float pre_velocity_shank_x = 0.00f;
+    float pre_velocity_shank_y = 0.00f;
+    float pre_velocity_shank_z = 0.00f;
+    float pre_theta_thigh_x = 0.00f;
+    float pre_theta_thigh_y = 0.00f;
+    float pre_theta_thigh_z = 0.00f;
+    float pre_velocity_thigh_x = 0.00f;
+    float pre_velocity_thigh_y = 0.00f;
+    float pre_velocity_thigh_z = 0.00f;
+    float pre_velocity_hip_x = 0.00f;
+    float pre_velocity_hip_y = 0.00f;
+    float pre_velocity_hip_z = 0.00f;
     vector <float> acc = {0,0,0};
     while (true) {
         // Read sensor data
@@ -183,26 +179,54 @@ int main() {
             if (IMU.getSensorEventID() == SENSOR_REPORTID_GYROSCOPE_CALIBRATED) {
                 IMU.getGyro(gyroX, gyroY, gyroZ, gyroAccuracy);
             }
-            // Differentiate angular velocity 
-            differentiate(gyroX, gyroY, gyroZ, pre_gyroX, pre_gyroY, pre_gyroZ,
-                dt, acc);
+            // Differentiate shank velocity to obtain a_shank 
+            differentiate(velocity_shank_x, velocity_shank_y, velocity_shank_z, pre_velocity_shank_x,
+                pre_velocity_shank_y, pre_velocity_shank_z, dt, a_shank);
 
-            pre_gyroX= gyroX;
-            pre_gyroY= gyroY;
-            pre_gyroZ= gyroZ;
+            // Differentiate theta thigh to obtain w_thigh
+            differentiate(theta_thigh_x, theta_thigh_y, theta_thigh_z, pre_theta_thigh_x,
+                pre_theta_thigh_y, pre_theta_thigh_z, dt, w_thigh);
+                
+            // Differentiate velocity thigh to obtain a_thigh
+            differentiate(velocity_thigh_x, velocity_thigh_y, velocity_thigh_z, pre_velocity_thigh_x,
+                pre_velocity_thigh_y, pre_velocity_thigh_z, dt, a_thigh);
 
-            pre_accX= accX;
-            pre_accY= accY;
-            pre_accZ= accZ;
+            // Differentiate velocity hip to obtain a_hip
+            differentiate(velocity_hip_x, velocity_hip_y, velocity_hip_z, pre_velocity_hip_x,
+                pre_velocity_hip_y, pre_velocity_hip_z, dt, a_hip);    
 
-            pre_pitch= pitch;
-            pre_yaw= yaw;
+            pre_velocity_shank_x= velocity_shank_x;
+            pre_velocity_shank_y= velocity_shank_y;
+            pre_velocity_shank_z= velocity_shank_z;
+
+            pre_theta_thigh_x= theta_thigh_x;
+            pre_theta_thigh_y= theta_thigh_y;
+            pre_theta_thigh_z= theta_thigh_z;
+
+            pre_velocity_thigh_x= velocity_thigh_x;
+            pre_velocity_thigh_y= velocity_thigh_y;
+            pre_velocity_thigh_z= velocity_thigh_z;
+
+            pre_velocity_hip_x= velocity_hip_x;
+            pre_velocity_hip_y= velocity_hip_y;
+            pre_velocity_hip_z= velocity_hip_z;    
         }
 
         // Calculate velocities for shank and thigh
         calculate_kinematics(data, velocity_shank_x, velocity_shank_y, velocity_shank_z, 
                            velocity_thigh_x, velocity_thigh_y, velocity_thigh_z, velocity_IMU_x, 
                            velocity_IMU_y, velocity_IMU_z, dt);
+        // Check GRF function
+        // Function to calculate GRF
+        void calculate_grf(float m_shank, float m_thigh, float a_shank, float a_thigh, 
+            float a_hip, float g) {
+        float F_shank = m_shank * (a_shank - g);
+        float F_thigh = m_thigh * (a_thigh - g);
+        float F_hip = m_hip * (a_hip - g)        
+        float F_ground = F_shank + F_thigh + F_hip;
+    
+        std::cout << "GRF: " << F_ground << " N" << std::endl;
+        }         
 
         // Calculate GRF
         float a_shank = sqrt(velocity_shank_x * velocity_shank_x + velocity_shank_y * velocity_shank_y);
