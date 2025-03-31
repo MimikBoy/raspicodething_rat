@@ -102,22 +102,22 @@ void calculate_kinematics(SensorData &data, float &velocity_shank_x, float &velo
     // Integrate acceleration to velocity for shank and thigh
     integrate_acceleration(velocity_shank_x, velocity_shank_y, velocity_shank_z, data, dt);
 
-    // Calculate the velocity of the shank, knee, thigh with cross product approximation
+    // Calculate the velocity of the shank, knee, thigh and hip with cross product approximation
     velocity_shank_x = velocity_IMU_x + data.gyro_z * L_shank_x * COM_shank;
     velocity_shank_y = velocity_IMU_y + data.gyro_z * L_shank_x * COM_shank;
     velocity_shank_z = velocity_IMU_z + data.gyro_z * L_shank_z * COM_shank; 
 
-    velocity_knee_x = velocity_shank_x + data.gyro_z * L_shank_x;
-    velocity_knee_y = velocity_shank_y + data.gyro_z * L_shank_x;
-    velocity_knee_z = velocity_shank_z + data.gyro_z * L_shank_z;
+    velocity_knee_x = velocity_IMU_x + data.gyro_z * L_shank_x;
+    velocity_knee_y = velocity_IMU_y + data.gyro_z * L_shank_x;
+    velocity_knee_z = velocity_IMU_z + data.gyro_z * L_shank_z;
 
     velocity_thigh_x = velocity_knee_x + w_shank_z * (1-COM_thigh) * L_thigh_x;
     velocity_thigh_y = velocity_knee_y + w_shank_z * (1-COM_thigh) * L_thigh_x;
     velocity_thigh_z = velocity_knee_z + w_shank_z * (1-COM_thigh) * L_thigh_z; 
     
-    velocity_hip_x = velocity_knee_x + w_shank_z * L_thigh_x;
-    velocity_hip_y = velocity_knee_y + w_shank_z * L_thigh_x;
-    velocity_hip_z = velocity_knee_z + w_shank_z * L_thigh_z; 
+    velocity_hip_x = velocity_knee_x + w_thigh_z * L_thigh_x;
+    velocity_hip_y = velocity_knee_y + w_thigh_z * L_thigh_x;
+    velocity_hip_z = velocity_knee_z + w_thigh_z * L_thigh_z; 
 }
 
 // Function to integrate acceleration to get velocity
@@ -152,6 +152,7 @@ int main() {
     float velocity_thigh_x = 0.0f, velocity_thigh_y = 0.0f, velocity_thigh_z = 0.0f;
     float velocity_IMU_x = 0.0f, velocity_IMU_y = 0.0f, velocity_IMU_z = 0.0f;
     float velocity_knee_x = 0.0f, velocity_knee_y = 0.0f, velocity_knee_z = 0.0f;
+    float velocity_hip_x = 0.0f, velocity_hip_y = 0.0f, velocity_hip_z = 0.0f;
 
     float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
 
