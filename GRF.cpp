@@ -37,36 +37,6 @@ struct SensorData {
 };
 
 
-// Function to read 16-bit signed data from IMU 
-int16_t read_sensor_data(uint8_t reg) {
-    uint8_t buf[2];
-    i2c_write_blocking(I2C_PORT, BNO085_ADDR, &reg, 1, true);
-    i2c_read_blocking(I2C_PORT, BNO085_ADDR, buf, 2, false);
-    return (int16_t)((buf[1] << 8) | buf[0]);
-}
-
-// Read accelerometer, gyroscope, and angle data (make sure we can read the angle from IMU)
-SensorData read_sensor() {
-    SensorData data;
-    
-    // Read acceleration data
-    data.accel_x = read_sensor_data(0x08) * 0.001f;
-    data.accel_y = read_sensor_data(0x0A) * 0.001f;
-    data.accel_z = read_sensor_data(0x0C) * 0.001f;
-
-    // Read gyroscope data
-    data.gyro_x = read_sensor_data(0x14) * 0.001f;
-    data.gyro_y = read_sensor_data(0x16) * 0.001f;
-    data.gyro_z = read_sensor_data(0x18) * 0.001f;
-
-    // Read angle
-    data.angle_x = read_sensor_data(0x1A) * 0.1f;  // Assuming 0.1 degree per unit Not sure how much we need
-    data.angle_y = read_sensor_data(0x1C) * 0.1f;
-    data.angle_z = read_sensor_data(0x1E) * 0.1f;
-
-    return data;
-}
-
 // Function to compute the length vectors for shank and thigh
 void calculate_length_vectors(float theta_shank, float L_shank_y, float L_thigh_y, float theta_thigh, float &L_shank_x, float &L_shank_z, float &L_thigh_x, float &L_thigh_z) {
     // Shank Length Vector
@@ -161,6 +131,7 @@ int main() {
 
     IMU.enableAccelerometer(2500);
     IMU.enableGameRotationVector(2500);
+    IMU.enableGyro(2500);
 
     // User input
     std::cin >> L_shank;
@@ -172,6 +143,8 @@ int main() {
     float pitch = 0.0f, yaw = 0.0f;// Quaternion values for IMU
     uint8_t accAccuracy = 0; // Quaternion accuracy
     float accX = 0.0f, accY = 0.0f, accZ = 0.0f; // Accelerometer values
+    float gyroX = 0.0f, gyroY = 0.0f, gyroZ = 0.0f; // Gyroscope values
+    uint8_t gyroAccuracy = 0.0f; // Gyroscope accuracy
 
     // Initialize velocity variables
     float velocity_shank_x = 0.0f, velocity_shank_y = 0.0f, velocity_shank_z = 0.0f;
@@ -192,6 +165,10 @@ int main() {
     
             if (IMU.getSensorEventID() == SENSOR_REPORTID_ACCELEROMETER) {
                 IMU.getAccel(accX, accY, accZ, accAccuracy);
+            }
+
+            if (IMU.getSensorEventID() == SENSOR_REPORTID_GYROSCOPE_CALIBRATED) {
+                IMU.getGyro(gyroX, gyroY, gyroZ, gyroAccuracy);
             }
         }
 
