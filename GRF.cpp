@@ -10,6 +10,8 @@ using namespace std;
 #include "hardware/i2c.h"
 #include <cmath>
 #include <iostream>
+#include <bno08x.h>
+#include "utils.h"
 
 // I2C Settings
 #define I2C_PORT i2c0
@@ -33,14 +35,6 @@ struct SensorData {
     float angle_z;
 };
 
-// Initialize I2C
-void init_i2c() {
-    i2c_init(I2C_PORT, 400000);  // 400kHz clock
-    gpio_set_function(I2C_SDA_PIN, GPIO_FUNC_I2C);
-    gpio_set_function(I2C_SCL_PIN, GPIO_FUNC_I2C);
-    gpio_pull_up(I2C_SDA_PIN);  // Enable pull-up on SDA
-    gpio_pull_up(I2C_SCL_PIN);  // Enable pull-up on SCL
-}
 
 // Function to read 16-bit signed data from IMU 
 int16_t read_sensor_data(uint8_t reg) {
@@ -137,7 +131,19 @@ void calculate_grf(float m_shank, float m_thigh, float a_shank, float a_thigh, f
 }
 
 int main() {
-    init_i2c();  // Initialize I2C communication
+    i2c_inst_t* i2c_port0;
+    initI2C(i2c_port0, false);
+
+    BNO08x IMU;
+
+    while (IMU.begin(CONFIG::BNO08X_ADDR, i2c_port0)==false) {
+        printf("BNO08x not detected at default I2C address. Check wiring. Freezing\n");
+        scan_i2c_bus();
+        sleep_ms(1000);
+    }
+
+    IMU.enableAccelerometer(2500);
+    IMU.enableGameRotationVector(2500);
 
     // User input
     float L_shank, L_thigh, m;
@@ -146,6 +152,10 @@ int main() {
     std::cin >> L_thigh;
     std::cout << "Enter the Total Mass of the Body (m) in kg: ";
     std::cin >> m;
+
+    float pitch = 0.0f, yaw = 0.0f;// Quaternion values for IMU
+    uint8_t accAccuracy = 0; // Quaternion accuracy
+    float accX = 0.0f, accY = 0.0f, accZ = 0.0f; // Accelerometer values
 
     // Initialize velocity variables
     float velocity_shank_x = 0.0f, velocity_shank_y = 0.0f, velocity_shank_z = 0.0f;
@@ -157,7 +167,16 @@ int main() {
 
     while (true) {
         // Read sensor data
-        SensorData data = read_sensor();
+        if (IMU.getSensorEvent() == true){
+            if (IMU.getSensorEventID() == SENSOR_REPORTID_GAME_ROTATION_VECTOR) {
+                pitch = IMU.getGamePitch();
+                yaw = IMU.getGameYaw();
+            }
+    
+            if (IMU.getSensorEventID() == SENSOR_REPORTID_ACCELEROMETER) {
+                IMU.getAccel(accX, accY, accZ, accAccuracy);
+            }
+        }
 
         // Calculate velocities for shank and thigh
         calculate_kinematics(data, velocity_shank_x, velocity_shank_y, velocity_shank_z, 

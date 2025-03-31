@@ -62,7 +62,6 @@ add_subdirectory(
 # Add any user requested libraries
 target_link_libraries(raspicodething_rat 
         pico_cyw43_arch_none
-        main
         BNO08x_Pico_Library
         )
 
