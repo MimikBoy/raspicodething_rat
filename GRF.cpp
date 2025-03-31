@@ -73,36 +73,51 @@ SensorData read_sensor() {
 }
 
 // Function to compute the length vectors for shank and thigh
-void calculate_length_vectors(float theta_shank, float theta_thigh, float &L_shank_x, float &L_shank_z, float &L_thigh_x, float &L_thigh_z) {
+void calculate_length_vectors(float theta_shank, float L_shank_y, float L_thigh_y, float theta_thigh, float &L_shank_x, float &L_shank_z, float &L_thigh_x, float &L_thigh_z) {
     // Shank Length Vector
     L_shank_x = L_shank * sin(theta_shank);
+    L_shank_y=0;
     L_shank_z = L_shank * cos(theta_shank);
 
     // Thigh Length Vector
     L_thigh_x = L_thigh * sin(theta_thigh);
+    L_thigh_y=0;
     L_thigh_z = L_thigh * cos(theta_thigh);
 }
 
-// Function to compute the velocities of shank and thigh
+// Function to compute the velocities of shank, knee, thigh, hip
 void calculate_kinematics(SensorData &data, float &velocity_shank_x, float &velocity_shank_y, float &velocity_shank_z,
-                        float &velocity_thigh_x, float &velocity_thigh_y, float &velocity_thigh_z, 
-                        float dt) {
+                        float &velocity_thigh_x, float &velocity_thigh_y, float &velocity_thigh_z, float velocity_knee_x, 
+                        float velocity_knee_y, float velocity_knee_z, float velocity_hip_x, float velocity_hip_y, 
+                        float velocity_hip_z, float velocity_IMU_x, float velocity_IMU_y, float velocity_IMU_z,  float dt) {
 
     // Use direct IMU angle for shank and thigh
-    float theta_shank = data.angle_x * M_PI / 180.0f;  // degrees to radians
-    float theta_thigh = data.angle_y * M_PI / 180.0f;  // thigh angle is in Y axis?
+    float theta_shank = data.angle_x //same as theta_IMU by property of z-corner
+    float theta_thigh = data.angle_y * M_PI / 180.0f;  // CHANGE THIS
 
     // Calculate length vectors for shank and thigh
     float L_shank_x, L_shank_z, L_thigh_x, L_thigh_z;
     calculate_length_vectors(theta_shank, theta_thigh, L_shank_x, L_shank_z, L_thigh_x, L_thigh_z);
 
-    // Integrate acceleration for velocity for shank and thigh
+    // Integrate acceleration to velocity for shank and thigh
     integrate_acceleration(velocity_shank_x, velocity_shank_y, velocity_shank_z, data, dt);
 
-    // Calculate the velocity of the thigh with cross product approximation 
-    velocity_thigh_x = velocity_shank_x + data.gyro_z * L_shank_x * COM_shank;
-    velocity_thigh_y = velocity_shank_y + data.gyro_z * L_shank_x * COM_shank;
-    velocity_thigh_z = velocity_shank_z + data.gyro_z * L_shank_z * COM_shank;
+    // Calculate the velocity of the shank, knee, thigh with cross product approximation
+    velocity_shank_x = velocity_IMU_x + data.gyro_z * L_shank_x * COM_shank;
+    velocity_shank_y = velocity_IMU_y + data.gyro_z * L_shank_x * COM_shank;
+    velocity_shank_z = velocity_IMU_z + data.gyro_z * L_shank_z * COM_shank; 
+
+    velocity_knee_x = velocity_shank_x + data.gyro_z * L_shank_x;
+    velocity_knee_y = velocity_shank_y + data.gyro_z * L_shank_x;
+    velocity_knee_z = velocity_shank_z + data.gyro_z * L_shank_z;
+
+    velocity_thigh_x = velocity_knee_x + w_shank_z * (1-COM_thigh) * L_thigh_x;
+    velocity_thigh_y = velocity_knee_y + w_shank_z * (1-COM_thigh) * L_thigh_x;
+    velocity_thigh_z = velocity_knee_z + w_shank_z * (1-COM_thigh) * L_thigh_z; 
+    
+    velocity_hip_x = velocity_knee_x + w_shank_z * L_thigh_x;
+    velocity_hip_y = velocity_knee_y + w_shank_z * L_thigh_x;
+    velocity_hip_z = velocity_knee_z + w_shank_z * L_thigh_z; 
 }
 
 // Function to integrate acceleration to get velocity
@@ -126,11 +141,6 @@ int main() {
 
     // User input
     float L_shank, L_thigh, m;
-    //std::cout << "Enter the Center of Mass for Shank (COM_shank): ";
-    //std::cin >> COM_shank;
-    //std::cout << "Enter the Center of Mass for Thigh (COM_thigh): ";
-    //std::cin >> COM_thigh;
-    //std::cout << "Enter the Length of Shank (L_shank) in meters: "; //do we ask for COM?
     std::cin >> L_shank;
     std::cout << "Enter the Length of Thigh (L_thigh) in meters: ";
     std::cin >> L_thigh;
@@ -140,8 +150,10 @@ int main() {
     // Initialize velocity variables
     float velocity_shank_x = 0.0f, velocity_shank_y = 0.0f, velocity_shank_z = 0.0f;
     float velocity_thigh_x = 0.0f, velocity_thigh_y = 0.0f, velocity_thigh_z = 0.0f;
+    float velocity_IMU_x = 0.0f, velocity_IMU_y = 0.0f, velocity_IMU_z = 0.0f;
+    float velocity_knee_x = 0.0f, velocity_knee_y = 0.0f, velocity_knee_z = 0.0f;
 
-    float dt = 0.001f;  // Time step for 1 kHz (1 millisecond between calculations)
+    float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
 
     while (true) {
         // Read sensor data
@@ -149,24 +161,28 @@ int main() {
 
         // Calculate velocities for shank and thigh
         calculate_kinematics(data, velocity_shank_x, velocity_shank_y, velocity_shank_z, 
-                           velocity_thigh_x, velocity_thigh_y, velocity_thigh_z, dt);
+                           velocity_thigh_x, velocity_thigh_y, velocity_thigh_z, velocity_IMU_x, 
+                           velocity_IMU_y, velocity_IMU_z, dt);
 
         // Calculate GRF
         float a_shank = sqrt(velocity_shank_x * velocity_shank_x + velocity_shank_y * velocity_shank_y);
         float a_thigh = sqrt(velocity_thigh_x * velocity_thigh_x + velocity_thigh_y * velocity_thigh_y);
         calculate_grf(m * 0.057f, m * 0.1416f, a_shank, a_thigh, 9.81f);  // Using 9.81m/s^2 for gravity
 
-        sleep_us(3);  // Sleep 3 micro sec until next sample to be taken
+        sleep_ms(4);  // Sleep 4 mili sec until next sample to be taken
     }
 
     return 0;
 }
+// Function to calculate velocity of the shank
+void(float v_IMU, float w_IMU, const COM_shank, float L_shank){
+    v_shank
+}
 
-//Make sure im reading from correct pins
-//revisa el datasheet
+//a_shank, a_thigh, v_hip, a_hip, v_shank, v_knee, w_thigh, v_thigh 
+//Make sure pins match datasheet
 //how much sleep time between samples? 
 //not sure how to write the communication between raspberry pies here to do the sum
 //how to match time instants between raspberry pies
 //COM creo que no es un input sino que lo definimos nosotros? 
 //Assuming 0.1 degree per unit Not sure how much we need
-//Check if calculating the velocity of the thigh with cross product approximation is fine
