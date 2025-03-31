@@ -92,15 +92,22 @@ void calculate_kinematics(SensorData &data, float &velocity_shank_x, float &velo
                         float velocity_hip_z, float velocity_IMU_x, float velocity_IMU_y, float velocity_IMU_z,  float dt) {
 
     // Use direct IMU angle for shank and thigh
-    float theta_shank = data.angle_x //same as theta_IMU by property of z-corner
-    float theta_thigh = data.angle_y * M_PI / 180.0f;  // CHANGE THIS
+    float theta_shank_x = data.angle_x //same as theta_IMU by property of z-corner
+    float theta_shank_y = data.angle_y 
+    float theta_shank_z = data.angle_z
+    float theta_thigh_x = data.angle_x * M_PI / 180.0f;  // CHANGE THIS
+    float theta_thigh_y = data.angle_y * M_PI / 180.0f;  // CHANGE THIS
+    float theta_thigh_z = data.angle_z * M_PI / 180.0f;  // CHANGE THIS
 
     // Calculate length vectors for shank and thigh
     float L_shank_x, L_shank_z, L_thigh_x, L_thigh_z;
     calculate_length_vectors(theta_shank, theta_thigh, L_shank_x, L_shank_z, L_thigh_x, L_thigh_z);
 
-    // Integrate acceleration to velocity for shank and thigh
-    integrate_acceleration(velocity_shank_x, velocity_shank_y, velocity_shank_z, data, dt);
+    // Integrate acceleration to get velocity of the IMU
+    integrate_acceleration(velocity_IMU_x, velocity_IMU_y, velocity_IMU_z, data, dt);
+
+    // Differentiate angular velocity 
+    differentiate_velocity(theta_shank_x)
 
     // Calculate the velocity of the shank, knee, thigh and hip with cross product approximation
     velocity_shank_x = velocity_IMU_x + data.gyro_z * L_shank_x * COM_shank;
@@ -125,6 +132,15 @@ void integrate_acceleration(float &velocity_x, float &velocity_y, float &velocit
     velocity_x += accel_data.accel_x * dt;
     velocity_y += accel_data.accel_y * dt;
     velocity_z += accel_data.accel_z * dt;
+}
+
+// Function to differentiate velocity to get acceleration
+void differentiate_velocity(float &acceleration_x, float &acceleration_y, float &acceleration_z, float &pre_velocity_x, 
+    float &pre_velocity_y, float &pre_velocity_z, float &velocity_x,
+    float &velocity_y, float &velocity_z, const SensorData &accel_data, float dt) {
+    acceleration_x += (pre_velocity_x - velocity_x) / dt;
+    acceleration_y += (pre_velocity_y - velocity_y) / dt;
+    acceleration_z += (pre_velocity_z - velocity_z) / dt;
 }
 
 // Function to compute Ground Reaction Force
@@ -175,15 +191,12 @@ int main() {
 
     return 0;
 }
-// Function to calculate velocity of the shank
-void(float v_IMU, float w_IMU, const COM_shank, float L_shank){
-    v_shank
-}
 
-//a_shank, a_thigh, v_hip, a_hip, v_shank, v_knee, w_thigh, v_thigh 
+//a_shank, a_thigh, a_hip, w_thigh 
 //Make sure pins match datasheet
 //how much sleep time between samples? 
 //not sure how to write the communication between raspberry pies here to do the sum
 //how to match time instants between raspberry pies
 //COM creo que no es un input sino que lo definimos nosotros? 
 //Assuming 0.1 degree per unit Not sure how much we need
+//Calibration?
