@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <iostream>
-//#include <vector>
+#include <vector>
 #include "hardware/i2c.h"
 #include "pico/stdlib.h"
 using namespace std;
@@ -69,43 +69,48 @@ void calculate_kinematics(SensorData &data, float &velocity_shank_x, float &velo
     calculate_length_vectors(theta_shank, theta_thigh, L_shank_x, L_shank_z, L_thigh_x, L_thigh_z);
 
     // Integrate acceleration to get velocity of the IMU
-    integrate_acceleration(velocity_IMU_x, velocity_IMU_y, velocity_IMU_z, data, dt);
+    integrate(velocity_IMU_x, velocity_IMU_y, velocity_IMU_z, data, dt);
 
-    // Differentiate angular velocity 
-    differentiate_velocity(theta_shank_x)
+    // Function to calculate cross product of two 3D vectores
+    void crossProduct(float vect_A[3], float vect_B[3], float cross_P[3]) {
+        cross_P[0] = vect_A[1] * vect_B[2] - vect_A[2] * vect_B[1];
+        cross_P[1] = vect_A[2] * vect_B[0] - vect_A[0] * vect_B[2];
+        cross_P[2] = vect_A[0] * vect_B[1] - vect_A[1] * vect_B[0];
+    }
+
 
     // Calculate the velocity of the shank, knee, thigh and hip with cross product approximation
-    velocity_shank_x = velocity_IMU_x + data.gyro_y * L_shank_z * COM_shank;
-    velocity_shank_y = velocity_IMU_y + data.gyro_z * L_shank_x * COM_shank;
-    velocity_shank_z = velocity_IMU_z + data.gyro_z * L_shank_z * COM_shank; 
+    velocity_shank_x = velocity_IMU_x + crossProduct(data.gyro_y, L_shank_z * COM_shank, cross_P); //check axis for cross prod
+    velocity_shank_y = velocity_IMU_y + crossProduct(data.gyro_x, L_shank_z * COM_shank, cross_P); //check axis for cross prod
+    velocity_shank_z = velocity_IMU_z + crossProduct(data.gyro_y, L_shank_x * COM_shank, cross_P); //check axis for cross prod
 
-    velocity_knee_x = velocity_IMU_x + data.gyro_z * L_shank_x;
-    velocity_knee_y = velocity_IMU_y + data.gyro_z * L_shank_x;
-    velocity_knee_z = velocity_IMU_z + data.gyro_z * L_shank_z;
+    velocity_knee_x = velocity_IMU_x + crossProduct(data.gyro_z, L_shank_x, cross_P); //check axis for cross prod
+    velocity_knee_y = velocity_IMU_y + crossProduct(data.gyro_z, L_shank_x, cross_P); //check axis for cross prod
+    velocity_knee_z = velocity_IMU_z + crossProduct(data.gyro_z, L_shank_z, cross_P); //check axis for cross prod
 
-    velocity_thigh_x = velocity_knee_x + w_shank_z * (1-COM_thigh) * L_thigh_x;
-    velocity_thigh_y = velocity_knee_y + w_shank_z * (1-COM_thigh) * L_thigh_x;
-    velocity_thigh_z = velocity_knee_z + w_shank_z * (1-COM_thigh) * L_thigh_z; 
+    velocity_thigh_x = velocity_knee_x + crossProduct(w_shank_z, (1-COM_thigh) * L_thigh_x, cross_P); //check axis for cross prod
+    velocity_thigh_y = velocity_knee_y + crossProduct(w_shank_z, (1-COM_thigh) * L_thigh_x, cross_P); //check axis for cross prod
+    velocity_thigh_z = velocity_knee_z + crossProduct(w_shank_z, (1-COM_thigh) * L_thigh_z, cross_P); //check axis for cross prod
     
-    velocity_hip_x = velocity_knee_x + w_thigh_z * L_thigh_x;
-    velocity_hip_y = velocity_knee_y + w_thigh_z * L_thigh_x;
-    velocity_hip_z = velocity_knee_z + w_thigh_z * L_thigh_z; 
+    velocity_hip_x = velocity_knee_x + crossProduct(w_thigh_z, L_thigh_x, cross_P); //check axis for cross prod
+    velocity_hip_y = velocity_knee_y + crossProduct(w_thigh_z, L_thigh_x, cross_P); //check axis for cross prod
+    velocity_hip_z = velocity_knee_z + crossProduct(w_thigh_z, L_thigh_z, cross_P); //check axis for cross prod
 }
 
 // Function to integrate acceleration to get velocity
-void integrate_acceleration(float &velocity_x, float &velocity_y, float &velocity_z, const SensorData &accel_data, float dt) {
+void integrate(float &velocity_x, float &velocity_y, float &velocity_z, const SensorData &accel_data, float dt) {
     velocity_x += accel_data.accel_x * dt;
     velocity_y += accel_data.accel_y * dt;
     velocity_z += accel_data.accel_z * dt;
 }
 
 // Function to differentiate velocity to get acceleration
-void differentiate_velocity(float &acceleration_x, float &acceleration_y, float &acceleration_z, float &pre_velocity_x, 
-    float &pre_velocity_y, float &pre_velocity_z, float &velocity_x,
-    float &velocity_y, float &velocity_z, const SensorData &accel_data, float dt) {
-    acceleration_x += (pre_velocity_x - velocity_x) / dt;
-    acceleration_y += (pre_velocity_y - velocity_y) / dt;
-    acceleration_z += (pre_velocity_z - velocity_z) / dt;
+void differentiate(float x, float y, float z, float pre_x, float pre_y, float pre_z,
+    float dt, vector<float> &acc) {
+    
+    acc[0] += (pre_x - x) / dt;
+    acc[1] += (pre_y - y) / dt;
+    acc[2] += (pre_z - z) / dt;
 }
 
 // Function to compute Ground Reaction Force
@@ -154,7 +159,15 @@ int main() {
     float velocity_hip_x = 0.0f, velocity_hip_y = 0.0f, velocity_hip_z = 0.0f;
 
     float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
-
+    float pre_gyroX = 0.00f;
+    float pre_gyroY = 0.00f;
+    float pre_gyroZ = 0.00f;
+    float pre_accX = 0.00f;
+    float pre_accY = 0.00f;
+    float pre_accZ = 0.00f;
+    float pre_yaw = 0.00f;
+    float pre_pitch = 0.00f;
+    vector <float> acc = {0,0,0};
     while (true) {
         // Read sensor data
         if (IMU.getSensorEvent() == true){
@@ -170,6 +183,20 @@ int main() {
             if (IMU.getSensorEventID() == SENSOR_REPORTID_GYROSCOPE_CALIBRATED) {
                 IMU.getGyro(gyroX, gyroY, gyroZ, gyroAccuracy);
             }
+            // Differentiate angular velocity 
+            differentiate(gyroX, gyroY, gyroZ, pre_gyroX, pre_gyroY, pre_gyroZ,
+                dt, acc);
+
+            pre_gyroX= gyroX;
+            pre_gyroY= gyroY;
+            pre_gyroZ= gyroZ;
+
+            pre_accX= accX;
+            pre_accY= accY;
+            pre_accZ= accZ;
+
+            pre_pitch= pitch;
+            pre_yaw= yaw;
         }
 
         // Calculate velocities for shank and thigh
