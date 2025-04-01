@@ -57,12 +57,12 @@ void calculate_kinematics(SensorData &data, float &velocity_shank_x, float &velo
                         float velocity_hip_z, float velocity_IMU_x, float velocity_IMU_y, float velocity_IMU_z,  float dt) {
 
     // Use direct IMU angle for shank and thigh
-    float theta_shank_x = data.angle_x //same as theta_IMU by property of z-corner
-    float theta_shank_y = data.angle_y 
-    float theta_shank_z = data.angle_z
-    float theta_thigh_x = data.angle_x * M_PI / 180.0f;  // CHANGE THIS
-    float theta_thigh_y = data.angle_y * M_PI / 180.0f;  // CHANGE THIS
-    float theta_thigh_z = data.angle_z * M_PI / 180.0f;  // CHANGE THIS
+    float theta_shank_x = data.angle_x; //same as theta_IMU by property of z-corner
+    float theta_shank_y = data.angle_y;
+    float theta_shank_z = data.angle_z;
+    float theta_thigh_x = data.angle_x;  // CHANGE THIS
+    float theta_thigh_y = data.angle_y; // CHANGE THIS
+    float theta_thigh_z = data.angle_z; // CHANGE THIS
 
     // Calculate length vectors for shank and thigh
     float L_shank_x, L_shank_z, L_thigh_x, L_thigh_z;
@@ -112,6 +112,17 @@ void differentiate(float x, float y, float z, float pre_x, float pre_y, float pr
     acc[1] += (pre_y - y) / dt;
     acc[2] += (pre_z - z) / dt;
 }
+
+    // Function to calculate GRF
+    void calculate_grf(float m_shank, float m_thigh, float a_shank, float a_thigh, 
+        float a_hip, float g, float &F_shank, float &F_thigh, float &F_hip, float &F_ground) {
+        F_shank = m_shank * (a_shank - g);
+        F_thigh = m_thigh * (a_thigh - g);
+        F_hip = m_hip * (a_hip - g);       
+        F_ground = F_shank + F_thigh + F_hip;
+
+    std::cout << "GRF: " << F_ground << " N" << std::endl;
+    } 
 
 int main() {
     i2c_inst_t* i2c_port0;
@@ -169,7 +180,7 @@ int main() {
     float pre_velocity_thigh_z = 0.00f;
     float pre_velocity_hip_x = 0.00f;
     float pre_velocity_hip_y = 0.00f;
-    float pre_velocity_hip_z = 0.00f;
+    float pre_velocity_hip_z = 0.00f;        
     
     while (true) {
         // Read sensor data
@@ -223,17 +234,7 @@ int main() {
         calculate_kinematics(data, velocity_shank_x, velocity_shank_y, velocity_shank_z, 
                            velocity_thigh_x, velocity_thigh_y, velocity_thigh_z, velocity_IMU_x, 
                            velocity_IMU_y, velocity_IMU_z, dt);
-        // Check GRF function
-        // Function to calculate GRF
-        void calculate_grf(float m_shank, float m_thigh, float a_shank, float a_thigh, 
-            float a_hip, float g) {
-        float F_shank = m_shank * (a_shank - g);
-        float F_thigh = m_thigh * (a_thigh - g);
-        float F_hip = m_hip * (a_hip - g)        
-        float F_ground = F_shank + F_thigh + F_hip;
     
-        std::cout << "GRF: " << F_ground << " N" << std::endl;
-        }         
         // Calculate GRF
         calculate_grf(m * COM_shank, m * COM_thigh, a_shank, a_thigh, a_hip, 9.81f);  // Using 9.81m/s^2 for gravity
 
@@ -243,6 +244,6 @@ int main() {
     return 0;
 }
 
-//Make sure pins match datasheet
+//Make sure pins match datasheet. Vlad
 //Calibration?
 //Axis in cross product and variables in general
