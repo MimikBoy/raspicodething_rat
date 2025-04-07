@@ -53,19 +53,13 @@ target_link_libraries(raspicodething_rat
 # Add the standard include files to the build
 target_include_directories(raspicodething_rat PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
-        sh2 PUBLIC
-        include
 )
 
 add_subdirectory(
     BNO08x_Pico_Library
 )
-add_library(sh2 STATIC
-        src/sh2.c
-        src/shtp.c
-        src/sh2_util.c
-        src/sh2_SensorValue.c
-)
+
+
 # Add any user requested libraries
 target_link_libraries(raspicodething_rat 
         pico_cyw43_arch_none
