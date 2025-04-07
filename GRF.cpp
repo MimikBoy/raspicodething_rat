@@ -111,9 +111,7 @@ int main() {
 
     // User input
     std::cin >> L_shank_ini;
-    std::cout << "Enter the Length of Thigh (L_thigh) in meters: ";
     std::cin >> L_thigh_ini;
-    std::cout << "Enter the Total Mass of the Body (m) in kg: ";
     std::cin >> m;
 
     float pitch = 0.0f, yaw = 0.0f, roll= 0.0f; 
@@ -121,8 +119,6 @@ int main() {
     float accX = 0.0f, accY = 0.0f, accZ = 0.0f; // Accelerometer values
     float gyroX = 0.0f, gyroY = 0.0f, gyroZ = 0.0f; // Gyroscope values
     uint8_t gyroAccuracy = 0.0f; // Gyroscope accuracy
-    float angleX = 0.0f, angleY = 0.0f, angleZ = 0.0f; // Angle values
-    uint8_t angleAccuracy = 0.0f; // Angle accuracy
 
     // // Initialize v, dt and w variables
     vector <float> v_IMU= {0,0,0};
