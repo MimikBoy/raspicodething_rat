@@ -39,7 +39,6 @@ vector<float> estimate_angle_thigh(vector<float> angle)
 {   float theta_thigh_x = angle[0];
     float theta_thigh_y = angle[1];
     float theta_thigh_z = angle[2];
-
     return{theta_thigh_x, theta_thigh_y, theta_thigh_z};
 }
 
