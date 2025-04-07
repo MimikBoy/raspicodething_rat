@@ -36,9 +36,9 @@ vector<float> calculate_length(vector<float> angle, float length){
 // NOTE THIS IS A PLACEHOLDER:
 // Function to estimate the thigh angle
 vector<float> estimate_angle_thigh(vector<float> angle)
-{   theta_thigh_x = angle[0];
-    theta_thigh_y = angle[1];
-    theta_thigh_z = angle[2];
+{   float theta_thigh_x = angle[0];
+    float theta_thigh_y = angle[1];
+    float theta_thigh_z = angle[2];
 
     return{theta_thigh_x, theta_thigh_y, theta_thigh_z};
 }
@@ -58,8 +58,8 @@ vector<float> estimate_angle_thigh(vector<float> angle)
     //float L_shank_x, L_shank_z, L_thigh_x, L_thigh_z;
     //calculate_length_vectors(theta_shank_x, theta_thigh_x, L_shank_x, L_shank_z, L_thigh_x, L_thigh_z);
 
-    // Integrate acceleration to get v of the IMU
-    integrate(v_IMU_x, v_IMU_y, v_IMU_z, data, dt);
+    // // Integrate acceleration to get v of the IMU
+    // integrate(v_IMU_x, v_IMU_y, v_IMU_z, data, dt);
 
     // Function to calculate cross product of two 3D vectores
     void crossProduct(float vect_A[3], float vect_B[3], float cross_P[3]) {
@@ -87,21 +87,23 @@ vector<float> estimate_angle_thigh(vector<float> angle)
     v_hip_z = v_knee_z + crossProduct(w_thigh_z, L_thigh_z, cross_P); //check axis for cross prod
 }
 
-// Function to integrate acceleration to get v
-void integrate(float &v_x, float &v_y, float &v_z, const SensorData &accel_data, float dt) {
-    v_x += accel_data.accel_x * dt;
-    v_y += accel_data.accel_y * dt;
-    v_z += accel_data.accel_z * dt;
-}
+    // Function to integrate 
+    vector <float> integrate(vector <float> a, float dt){
+        float bx += a[0] * dt;
+        float by += a[1] * dt;
+        float bz += a[2] * dt;
+    return {bx,by,bz};
+    }
 
-// Function to differentiate 
-void differentiate(float x, float y, float z, float pre_x, float pre_y, float pre_z,
-    float dt, vector<float> &acc) {
+    // Function to differentiate
+    vector <float> differentiate(vector <float> a, vector <float> pre_a, float dt){
+        float bx += (pre_a[0] - a[0]) / dt;
+        float by += (pre_a[1] - a[1]) / dt;
+        float bz += (pre_a[2] - a[2]) / dt;
+    return {bx,by,bz};
+    }
+
     
-    acc[0] += (pre_x - x) / dt;
-    acc[1] += (pre_y - y) / dt;
-    acc[2] += (pre_z - z) / dt;
-}
 
     // Function to calculate GRF
     void calculate_grf(float m_shank, float m_thigh, float a_shank, float a_thigh, 
@@ -158,19 +160,19 @@ int main() {
     vector <float> acc = {0,0,0};
     
     // Initialize pre variables (not the most efficient way but... :)
-    float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
-    float pre_v_shank_x = 0.00f;
-    float pre_v_shank_y = 0.00f;
-    float pre_v_shank_z = 0.00f;
-    float pre_theta_thigh_x = 0.00f;
-    float pre_theta_thigh_y = 0.00f;
-    float pre_theta_thigh_z = 0.00f;
-    float pre_v_thigh_x = 0.00f;
-    float pre_v_thigh_y = 0.00f;
-    float pre_v_thigh_z = 0.00f;
-    float pre_v_hip_x = 0.00f;
-    float pre_v_hip_y = 0.00f;
-    float pre_v_hip_z = 0.00f;
+    // float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
+    // float pre_v_shank_x = 0.00f;
+    // float pre_v_shank_y = 0.00f;
+    // float pre_v_shank_z = 0.00f;
+    // float pre_theta_thigh_x = 0.00f;
+    // float pre_theta_thigh_y = 0.00f;
+    // float pre_theta_thigh_z = 0.00f;
+    // float pre_v_thigh_x = 0.00f;
+    // float pre_v_thigh_y = 0.00f;
+    // float pre_v_thigh_z = 0.00f;
+    // float pre_v_hip_x = 0.00f;
+    // float pre_v_hip_y = 0.00f;
+    // float pre_v_hip_z = 0.00f;
     
     while (true) {
         // Read sensor data
@@ -198,6 +200,10 @@ int main() {
             vector <float> L_shank= calculate_length(angle_IMU, L_shank);
             vector <float> L_thigh= calculate_length(angle_thigh, L_thigh);
 
+            // Integrate a_IMU to obtain v_IMU
+            vector <float> v_IMU= integrate(a_IMU, dt);
+
+
             // Differentiate shank v to obtain a_shank 
             differentiate(v_shank_x, v_shank_y, v_shank_z, pre_v_shank_x,
                 pre_v_shank_y, pre_v_shank_z, dt, a_shank);
@@ -215,22 +221,25 @@ int main() {
                 pre_v_hip_y, pre_v_hip_z, dt, a_hip); 
             
             
+            vector <float> pre_v_shank={v_shank};
+            vector <float> pre_v_thigh={v_thigh};
+            vector <float> pre_v_hip={v_hip}; 
+            vector <float> pre_v_knee={v_knee};   
+            // pre_v_shank_x= v_shank_x;
+            // pre_v_shank_y= v_shank_y;
+            // pre_v_shank_z= v_shank_z;
 
-            pre_v_shank_x= v_shank_x;
-            pre_v_shank_y= v_shank_y;
-            pre_v_shank_z= v_shank_z;
+            // pre_theta_thigh_x= theta_thigh_x;
+            // pre_theta_thigh_y= theta_thigh_y;
+            // pre_theta_thigh_z= theta_thigh_z;
 
-            pre_theta_thigh_x= theta_thigh_x;
-            pre_theta_thigh_y= theta_thigh_y;
-            pre_theta_thigh_z= theta_thigh_z;
+            // pre_v_thigh_x= v_thigh_x;
+            // pre_v_thigh_y= v_thigh_y;
+            // pre_v_thigh_z= v_thigh_z;
 
-            pre_v_thigh_x= v_thigh_x;
-            pre_v_thigh_y= v_thigh_y;
-            pre_v_thigh_z= v_thigh_z;
-
-            pre_v_hip_x= v_hip_x;
-            pre_v_hip_y= v_hip_y;
-            pre_v_hip_z= v_hip_z;    
+            // pre_v_hip_x= v_hip_x;
+            // pre_v_hip_y= v_hip_y;
+            // pre_v_hip_z= v_hip_z;    
         }
 
         // Calculate velocities for shank and thigh
