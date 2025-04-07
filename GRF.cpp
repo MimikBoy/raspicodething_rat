@@ -40,6 +40,14 @@ vector<float> entrywise_mul(vector<float> L, float COM){
     return{L_x, L_y, L_z};
 }
 
+// Function enrtywise addition
+vector<float> entrywise_add(vector<float> vect_A, vector<float> vect_B){
+    float vect_Cx = vect_A[0] + vect_B[0];
+    float vect_Cy = vect_A[1] + vect_B[1];
+    float vect_Cz = vect_A[2] + vect_B[2];
+    return{vect_Cx, vect_Cy, vect_Cz};
+}
+
 // NOTE THIS IS A PLACEHOLDER:
 // Function to estimate the thigh angle
 vector<float> estimate_angle_thigh(vector<float> angle){   
@@ -59,19 +67,19 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
 
     // Function to integrate
     // This does have a problem that it does not now the initial bx, by, bz
-    vector <float> integrate(vector <float> a, float dt){
-        float bx += (a[0] * dt);
-        float by += (a[1] * dt);
-        float bz += (a[2] * dt);
+    vector <float> integrate(vector <float> a, vector <float> b, float dt){
+        float bx = b[0] + (a[0] * dt);
+        float by = b[1] + (a[1] * dt);
+        float bz = b[2] + (a[2] * dt);
     return {bx, by, bz};
     }
 
     // This does have a problem that it does not now the initial bx, by, bz
     // Function to differentiate
-    vector <float> differentiate(vector <float> a, vector <float> pre_a, float dt){
-        float bx += ((pre_a[0] - a[0]) / dt);
-        float by += ((pre_a[1] - a[1]) / dt);
-        float bz += ((pre_a[2] - a[2]) / dt);
+    vector <float> differentiate(vector <float> a, vector <float> pre_a, vector <float> b, float dt){
+        float bx = b[0] + ((pre_a[0] - a[0]) / dt);
+        float by = b[1] + ((pre_a[1] - a[1]) / dt);
+        float bz = b[2] + ((pre_a[2] - a[2]) / dt);
     return {bx, by, bz};
     }
 
@@ -162,8 +170,8 @@ int main() {
             if (IMU.getSensorEventID() == SENSOR_REPORTID_GYROSCOPE_CALIBRATED) {
                 IMU.getGyro(gyroX, gyroY, gyroZ, gyroAccuracy);
             }
-            // Does this get the sensor data?
-            if (IMU.getSensorEventID() == SENSOR_REPORTID_GYROSCOPE_CALIBRATED) {
+            // Make sure to get angle with from sensor
+            if (IMU.getSensorEventID() == SENSOR_REPORTID_ANGLE_CALIBRATED) {
                 IMU.getGyro(angleX, angleY, angleZ, angleAccuracy);
             }
 
@@ -180,30 +188,32 @@ int main() {
             vector <float> L_thigh= calculate_length(angle_thigh, L_thigh_ini);
             vector <float> L_thigh_COM = entrywise_mul(L_thigh, (1-COM_thigh));
 
-            // dt is not defined properly!!
+            // dt is not initialized, same for v_IMU!!
             // Integrate a_IMU to obtain v_IMU
-            vector <float> v_IMU= integrate(a_IMU, dt);
+            const float dt = 0.000004f;
+            vector <float> v_IMU= integrate(a_IMU, v_IMU, dt);
 
             // Calculate velocity and acceleration shank
             vector <float> v_shank = v_IMU + crossProduct(w_IMU,L_shank_COM);
             // Not sure about pre
             vector <float> pre_v_shank={v_shank};
-            vector <float> a_shank = differentiate(v_shank, pre_v_shank, dt);
+            vector <float> a_shank = differentiate(v_shank, pre_v_shank, a_shank, dt);
 
             // Calculate velocity knee
             vector <float> v_knee= v_IMU + crossProduct(w_IMU,L_shank);
 
             // Calculate velocity and acceleration thigh
             vector <float> pre_angle_thigh={angle_thigh};
-            vector <float> w_thigh = differentiate(angle_thigh, pre_angle_thigh, dt);
+            vector <float> w_thigh = differentiate(angle_thigh, pre_angle_thigh, w_thigh, dt);
             vector <float> v_thigh= v_knee + crossProduct(w_thigh,L_thigh_COM);
             vector <float> pre_v_thigh={v_thigh};
-            vector <float> a_thigh = differentiate(v_thigh, pre_v_thigh, dt);
+            vector <float> a_thigh = differentiate(v_thigh, pre_v_thigh, a_thigh, dt);
             
             // Calculate velocity and acceleration hip
+
             vector <float> v_hip= v_knee + crossProduct(w_thigh,L_thigh);
             vector <float> pre_v_hip={v_hip};
-            vector <float> a_hip = differentiate(v_hip, pre_v_hip, dt);
+            vector <float> a_hip = differentiate(v_hip, pre_v_hip, a_hip, dt);
 
             // Calculate GRF
             vector <float> GRF = calculate_grf(a_IMU, a_thigh, a_hip, m);
