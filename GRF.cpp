@@ -24,27 +24,7 @@ const float COM_shank = 0.5726;  // Values taken from paper in Zotero
 const float COM_thigh = 0.4095; 
 float L_shank, L_thigh, m; // Defined by user (lower in the code)
 
-struct SensorData {
-    float accel_x;
-    float accel_y;
-    float accel_z;
-    float gyro_x;
-    float gyro_y;
-    float gyro_z;
-    float angle_x;
-    float angle_y;
-    float angle_z;
-}data;
-vector<float> a_IMU = {data.accel_x, data.accel_y, data.accel_z}; 
-vector<float> w_IMU = {data.gyro_x, data.gyro_y, data.gyro_z};   
-vector<float> angle_IMU = {data.angle_x, data.angle_y, data.angle_z}; 
-
 // Function to compute the length vectors for shank and thigh
-//void calculate_length_vectors(float theta_shank, float L_shank_y, float L_thigh_y, 
-    //float theta_thigh, float &L_shank_x, float &L_shank_z, float &L_thigh_x, float &L_thigh_z) {
-//vector <float> L_shank={0};
-//vector <float> L_thigh={0};
-
 vector<float> calculate_length(vector<float> angle, float length){
     // Shank Length Vector
     float L_x = length * sin(angle[0]);
@@ -52,10 +32,16 @@ vector<float> calculate_length(vector<float> angle, float length){
     float L_z= length * cos(angle[2]);
     return {L_x, L_y, L_z};
 }
-// Thigh Length Vector
-//L_thigh_x = L_thigh * sin(theta_thigh);
-//L_thigh_y=0;
-//L_thigh_z = L_thigh * cos(theta_thigh);
+
+// NOTE THIS IS A PLACEHOLDER:
+// Function to estimate the thigh angle
+vector<float> estimate_angle_thigh(vector<float> angle)
+{   theta_thigh_x = angle[0];
+    theta_thigh_y = angle[1];
+    theta_thigh_z = angle[2];
+
+    return{theta_thigh_x, theta_thigh_y, theta_thigh_z};
+}
 
 // Function to compute the velocities of shank, knee, thigh, hip
 //void calculate_kinematics(SensorData &data, float &v_shank_x, float &v_shank_y, float &v_shank_z,
@@ -64,11 +50,6 @@ vector<float> calculate_length(vector<float> angle, float length){
 //                       float v_hip_z, float v_IMU_x, float v_IMU_y, float v_IMU_z,  float dt) {
 
 
-    // Use direct IMU angle for shank and thigh
-    float theta_shank_x = data.angle_x; //same as theta_IMU by property of z-corner
-    
-    //float theta_shank_y = data.angle_y;
-    //float theta_shank_z = data.angle_z;
     //float theta_thigh_x = data.angle_x;  // CHANGE THIS
     //float theta_thigh_y = data.angle_y; // CHANGE THIS
     //float theta_thigh_z = data.angle_z; // CHANGE THIS
@@ -206,10 +187,17 @@ int main() {
             if (IMU.getSensorEventID() == SENSOR_REPORTID_GYROSCOPE_CALIBRATED) {
                 IMU.getGyro(gyroX, gyroY, gyroZ, gyroAccuracy);
             }
+            // Store sensor data in vector
+            vector<float> a_IMU = {data.accel_x, data.accel_y, data.accel_z}; 
+            vector<float> w_IMU = {data.gyro_x, data.gyro_y, data.gyro_z};   
+            vector<float> angle_IMU = {data.angle_x, data.angle_y, data.angle_z};
+
+            vector<float> angle_thigh = estimate_angle_thigh(angle_IMU);
 
             // Calculate Length vectors
             vector <float> L_shank= calculate_length(angle_IMU, L_shank);
-            //L_thigh= calculate_length()
+            vector <float> L_thigh= calculate_length(angle_thigh, L_thigh);
+
             // Differentiate shank v to obtain a_shank 
             differentiate(v_shank_x, v_shank_y, v_shank_z, pre_v_shank_x,
                 pre_v_shank_y, pre_v_shank_z, dt, a_shank);
