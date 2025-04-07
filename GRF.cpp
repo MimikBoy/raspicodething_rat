@@ -171,7 +171,7 @@ int main() {
                 IMU.getGyro(gyroX, gyroY, gyroZ, gyroAccuracy);
             }
             // Make sure to get angle with from sensor
-            if (IMU.getSensorEventID() == SENSOR_REPORTID_ANGLE_CALIBRATED) {
+            if (IMU.getSensorEventID() == SENSOR_REPORTID_ROTATION_VECTOR) {
                 IMU.getGyro(angleX, angleY, angleZ, angleAccuracy);
             }
 
@@ -194,24 +194,24 @@ int main() {
             vector <float> v_IMU= integrate(a_IMU, v_IMU, dt);
 
             // Calculate velocity and acceleration shank
-            vector <float> v_shank = v_IMU + crossProduct(w_IMU,L_shank_COM);
+            vector <float> v_shank = entrywise_add(v_IMU, crossProduct(w_IMU,L_shank_COM));
             // Not sure about pre
             vector <float> pre_v_shank={v_shank};
             vector <float> a_shank = differentiate(v_shank, pre_v_shank, a_shank, dt);
 
             // Calculate velocity knee
-            vector <float> v_knee= v_IMU + crossProduct(w_IMU,L_shank);
+            vector <float> v_knee= entrywise_add(v_IMU, crossProduct(w_IMU,L_shank));
 
             // Calculate velocity and acceleration thigh
             vector <float> pre_angle_thigh={angle_thigh};
             vector <float> w_thigh = differentiate(angle_thigh, pre_angle_thigh, w_thigh, dt);
-            vector <float> v_thigh= v_knee + crossProduct(w_thigh,L_thigh_COM);
+            vector <float> v_thigh= entrywise_add(v_knee, crossProduct(w_thigh,L_thigh_COM));
             vector <float> pre_v_thigh={v_thigh};
             vector <float> a_thigh = differentiate(v_thigh, pre_v_thigh, a_thigh, dt);
             
             // Calculate velocity and acceleration hip
 
-            vector <float> v_hip= v_knee + crossProduct(w_thigh,L_thigh);
+            vector <float> v_hip= entrywise_add(v_knee, crossProduct(w_thigh,L_thigh));
             vector <float> pre_v_hip={v_hip};
             vector <float> a_hip = differentiate(v_hip, pre_v_hip, a_hip, dt);
 
