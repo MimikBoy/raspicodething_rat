@@ -20,8 +20,6 @@ using namespace std;
 #define BNO085_ADDR 0x4C
 
 // Constants
-const float COM_shank = 0.5726;  // Values taken from paper in Zotero
-const float COM_thigh = 0.4095; 
 float L_shank_ini, L_thigh_ini, m; // Defined by user (lower in the code)
 
 // Function to compute the length vectors for shank and thigh
@@ -136,7 +134,6 @@ int main() {
     vector <float> pre_v_thigh= {0,0,0};
     vector <float> pre_v_knee= {0,0,0};
     vector <float> pre_v_hip= {0,0,0};
-    float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
     vector <float> w_thigh= {0,0,0};
     vector <float> w_IMU= {0,0,0};
 
@@ -146,9 +143,13 @@ int main() {
     vector<float> a_thigh = {0,0,0};
     vector<float> a_hip = {0,0,0};
 
-    //Initialize angles
+    // Initialize angles
     vector <float> pre_angle_thigh = {0,0,0};
-    
+
+    // Constants
+    const float COM_shank = 0.5726;  // Values taken from paper in Zotero
+    const float COM_thigh = 0.4095;
+    const float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
     
     while (true) {
         // Read sensor data
