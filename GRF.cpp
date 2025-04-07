@@ -35,38 +35,47 @@ struct SensorData {
     float angle_y;
     float angle_z;
 }data;
-
+vector<float> a_IMU = {data.accel_x, data.accel_y, data.accel_z}; 
+vector<float> w_IMU = {data.gyro_x, data.gyro_y, data.gyro_z};   
+vector<float> angle_IMU = {data.angle_x, data.angle_y, data.angle_z}; 
 
 // Function to compute the length vectors for shank and thigh
-void calculate_length_vectors(float theta_shank, float L_shank_y, float L_thigh_y, float theta_thigh, float &L_shank_x, float &L_shank_z, float &L_thigh_x, float &L_thigh_z) {
-    // Shank Length Vector
-    L_shank_x = L_shank * sin(theta_shank);
-    L_shank_y=0;
-    L_shank_z = L_shank * cos(theta_shank);
+//void calculate_length_vectors(float theta_shank, float L_shank_y, float L_thigh_y, 
+    //float theta_thigh, float &L_shank_x, float &L_shank_z, float &L_thigh_x, float &L_thigh_z) {
+//vector <float> L_shank={0};
+//vector <float> L_thigh={0};
 
-    // Thigh Length Vector
-    L_thigh_x = L_thigh * sin(theta_thigh);
-    L_thigh_y=0;
-    L_thigh_z = L_thigh * cos(theta_thigh);
+vector<float> calculate_length(vector<float> angle, float length){
+    // Shank Length Vector
+    float L_x = length * sin(angle[0]);
+    float L_y=0.00f;
+    float L_z= length * cos(angle[2]);
+    return {L_x, L_y, L_z};
 }
+// Thigh Length Vector
+//L_thigh_x = L_thigh * sin(theta_thigh);
+//L_thigh_y=0;
+//L_thigh_z = L_thigh * cos(theta_thigh);
 
 // Function to compute the velocities of shank, knee, thigh, hip
-void calculate_kinematics(SensorData &data, float &v_shank_x, float &v_shank_y, float &v_shank_z,
-                        float &v_thigh_x, float &v_thigh_y, float &v_thigh_z, float v_knee_x, 
-                        float v_knee_y, float v_knee_z, float v_hip_x, float v_hip_y, 
-                        float v_hip_z, float v_IMU_x, float v_IMU_y, float v_IMU_z,  float dt) {
+//void calculate_kinematics(SensorData &data, float &v_shank_x, float &v_shank_y, float &v_shank_z,
+//                        float &v_thigh_x, float &v_thigh_y, float &v_thigh_z, float v_knee_x, 
+//                        float v_knee_y, float v_knee_z, float v_hip_x, float v_hip_y, 
+//                       float v_hip_z, float v_IMU_x, float v_IMU_y, float v_IMU_z,  float dt) {
+
 
     // Use direct IMU angle for shank and thigh
     float theta_shank_x = data.angle_x; //same as theta_IMU by property of z-corner
-    float theta_shank_y = data.angle_y;
-    float theta_shank_z = data.angle_z;
-    float theta_thigh_x = data.angle_x;  // CHANGE THIS
-    float theta_thigh_y = data.angle_y; // CHANGE THIS
-    float theta_thigh_z = data.angle_z; // CHANGE THIS
+    
+    //float theta_shank_y = data.angle_y;
+    //float theta_shank_z = data.angle_z;
+    //float theta_thigh_x = data.angle_x;  // CHANGE THIS
+    //float theta_thigh_y = data.angle_y; // CHANGE THIS
+    //float theta_thigh_z = data.angle_z; // CHANGE THIS
 
     // Calculate length vectors for shank and thigh
-    float L_shank_x, L_shank_z, L_thigh_x, L_thigh_z;
-    calculate_length_vectors(theta_shank_x, theta_thigh_x, L_shank_x, L_shank_z, L_thigh_x, L_thigh_z);
+    //float L_shank_x, L_shank_z, L_thigh_x, L_thigh_z;
+    //calculate_length_vectors(theta_shank_x, theta_thigh_x, L_shank_x, L_shank_z, L_thigh_x, L_thigh_z);
 
     // Integrate acceleration to get v of the IMU
     integrate(v_IMU_x, v_IMU_y, v_IMU_z, data, dt);
@@ -197,6 +206,10 @@ int main() {
             if (IMU.getSensorEventID() == SENSOR_REPORTID_GYROSCOPE_CALIBRATED) {
                 IMU.getGyro(gyroX, gyroY, gyroZ, gyroAccuracy);
             }
+
+            // Calculate Length vectors
+            vector <float> L_shank= calculate_length(angle_IMU, L_shank);
+            //L_thigh= calculate_length()
             // Differentiate shank v to obtain a_shank 
             differentiate(v_shank_x, v_shank_y, v_shank_z, pre_v_shank_x,
                 pre_v_shank_y, pre_v_shank_z, dt, a_shank);
@@ -211,7 +224,9 @@ int main() {
 
             // Differentiate v hip to obtain a_hip
             differentiate(v_hip_x, v_hip_y, v_hip_z, pre_v_hip_x,
-                pre_v_hip_y, pre_v_hip_z, dt, a_hip);    
+                pre_v_hip_y, pre_v_hip_z, dt, a_hip); 
+            
+            
 
             pre_v_shank_x= v_shank_x;
             pre_v_shank_y= v_shank_y;
