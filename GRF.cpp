@@ -61,30 +61,31 @@ vector<float> estimate_angle_thigh(vector<float> angle)
     // integrate(v_IMU_x, v_IMU_y, v_IMU_z, data, dt);
 
     // Function to calculate cross product of two 3D vectores
-    void crossProduct(float vect_A[3], float vect_B[3], float cross_P[3]) {
-        cross_P[0] = vect_A[1] * vect_B[2] - vect_A[2] * vect_B[1];
-        cross_P[1] = vect_A[2] * vect_B[0] - vect_A[0] * vect_B[2];
-        cross_P[2] = vect_A[0] * vect_B[1] - vect_A[1] * vect_B[0];
+    vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B) {
+        float cross_Px = vect_A[1] * vect_B[2] - vect_A[2] * vect_B[1];
+        float cross_Py = vect_A[2] * vect_B[0] - vect_A[0] * vect_B[2];
+        float cross_Pz = vect_A[0] * vect_B[1] - vect_A[1] * vect_B[0];
+        return {cross_Px, cross_Py, cross_Pz};
     }
 
 
     // Calculate the v of the shank, knee, thigh and hip with cross product approximation
-    v_shank_x = v_IMU_x + crossProduct(data.gyro_y, L_shank_z * COM_shank, cross_P); //check axis for cross prod
-    v_shank_y = v_IMU_y + crossProduct(data.gyro_x, L_shank_z * COM_shank, cross_P); //check axis for cross prod
-    v_shank_z = v_IMU_z + crossProduct(data.gyro_y, L_shank_x * COM_shank, cross_P); //check axis for cross prod
+    // v_shank_x = v_IMU_x + crossProduct(data.gyro_y, L_shank_z * COM_shank, cross_P); //check axis for cross prod
+    // v_shank_y = v_IMU_y + crossProduct(data.gyro_x, L_shank_z * COM_shank, cross_P); //check axis for cross prod
+    // v_shank_z = v_IMU_z + crossProduct(data.gyro_y, L_shank_x * COM_shank, cross_P); //check axis for cross prod
 
-    v_knee_x = v_IMU_x + crossProduct(data.gyro_z, L_shank_x, cross_P); //check axis for cross prod
-    v_knee_y = v_IMU_y + crossProduct(data.gyro_z, L_shank_x, cross_P); //check axis for cross prod
-    v_knee_z = v_IMU_z + crossProduct(data.gyro_z, L_shank_z, cross_P); //check axis for cross prod
+    // v_knee_x = v_IMU_x + crossProduct(data.gyro_z, L_shank_x, cross_P); //check axis for cross prod
+    // v_knee_y = v_IMU_y + crossProduct(data.gyro_z, L_shank_x, cross_P); //check axis for cross prod
+    // v_knee_z = v_IMU_z + crossProduct(data.gyro_z, L_shank_z, cross_P); //check axis for cross prod
 
-    v_thigh_x = v_knee_x + crossProduct(w_shank_z, (1-COM_thigh) * L_thigh_x, cross_P); //check axis for cross prod
-    v_thigh_y = v_knee_y + crossProduct(w_shank_z, (1-COM_thigh) * L_thigh_x, cross_P); //check axis for cross prod
-    v_thigh_z = v_knee_z + crossProduct(w_shank_z, (1-COM_thigh) * L_thigh_z, cross_P); //check axis for cross prod
+    // v_thigh_x = v_knee_x + crossProduct(w_shank_z, (1-COM_thigh) * L_thigh_x, cross_P); //check axis for cross prod
+    // v_thigh_y = v_knee_y + crossProduct(w_shank_z, (1-COM_thigh) * L_thigh_x, cross_P); //check axis for cross prod
+    // v_thigh_z = v_knee_z + crossProduct(w_shank_z, (1-COM_thigh) * L_thigh_z, cross_P); //check axis for cross prod
     
-    v_hip_x = v_knee_x + crossProduct(w_thigh_z, L_thigh_x, cross_P); //check axis for cross prod
-    v_hip_y = v_knee_y + crossProduct(w_thigh_z, L_thigh_x, cross_P); //check axis for cross prod
-    v_hip_z = v_knee_z + crossProduct(w_thigh_z, L_thigh_z, cross_P); //check axis for cross prod
-}
+    // v_hip_x = v_knee_x + crossProduct(w_thigh_z, L_thigh_x, cross_P); //check axis for cross prod
+    // v_hip_y = v_knee_y + crossProduct(w_thigh_z, L_thigh_x, cross_P); //check axis for cross prod
+    // v_hip_z = v_knee_z + crossProduct(w_thigh_z, L_thigh_z, cross_P); //check axis for cross prod
+
 
     // Function to integrate 
     vector <float> integrate(vector <float> a, float dt){
@@ -144,19 +145,19 @@ int main() {
     float gyroX = 0.0f, gyroY = 0.0f, gyroZ = 0.0f; // Gyroscope values
     uint8_t gyroAccuracy = 0.0f; // Gyroscope accuracy
 
-    // Initialize v variables
-    float v_shank_x = 0.0f, v_shank_y = 0.0f, v_shank_z = 0.0f;
-    float v_thigh_x = 0.0f, v_thigh_y = 0.0f, v_thigh_z = 0.0f;
-    float v_IMU_x = 0.0f, v_IMU_y = 0.0f, v_IMU_z = 0.0f;
-    float v_knee_x = 0.0f, v_knee_y = 0.0f, v_knee_z = 0.0f;
-    float v_hip_x = 0.0f, v_hip_y = 0.0f, v_hip_z = 0.0f;
-    vector<float> w_thigh = {0,0,0};
+    // // Initialize v variables
+    // float v_shank_x = 0.0f, v_shank_y = 0.0f, v_shank_z = 0.0f;
+    // float v_thigh_x = 0.0f, v_thigh_y = 0.0f, v_thigh_z = 0.0f;
+    // float v_IMU_x = 0.0f, v_IMU_y = 0.0f, v_IMU_z = 0.0f;
+    // float v_knee_x = 0.0f, v_knee_y = 0.0f, v_knee_z = 0.0f;
+    // float v_hip_x = 0.0f, v_hip_y = 0.0f, v_hip_z = 0.0f;
+    // vector<float> w_thigh = {0,0,0};
 
-    // Initialize acceleration variables
-    vector<float> a_shank = {0,0,0};
-    vector<float> a_hip = {0,0,0};
-    vector<float> a_thigh = {0,0,0};
-    vector <float> acc = {0,0,0};
+    // // Initialize acceleration variables
+    // vector<float> a_shank = {0,0,0};
+    // vector<float> a_hip = {0,0,0};
+    // vector<float> a_thigh = {0,0,0};
+    // vector <float> acc = {0,0,0};
     
     // Initialize pre variables (not the most efficient way but... :)
     // float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
@@ -202,6 +203,11 @@ int main() {
             // Integrate a_IMU to obtain v_IMU
             vector <float> v_IMU= integrate(a_IMU, dt);
 
+            // Calculate velocities with cross product function
+            vector <float> v_shank= v_IMU + crossProduct(w_IMU,L_shank*COM_shank);
+            vector <float> v_knee= v_IMU + crossProduct(w_IMU,L_shank);
+            vector <float> v_thigh= v_knee + crossProduct(w_thigh,L_thigh*(1-COM_thigh));
+            vector <float> v_hip= v_knee + crossProduct(w_thigh,L_thigh);
 
             // Differentiate shank v to obtain a_shank 
             differentiate(v_shank_x, v_shank_y, v_shank_z, pre_v_shank_x,
