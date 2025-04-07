@@ -118,49 +118,45 @@ int main() {
     std::cout << "Enter the Total Mass of the Body (m) in kg: ";
     std::cin >> m;
 
-    float pitch = 0.0f, yaw = 0.0f;// Quaternion values for IMU
-    uint8_t accAccuracy = 0; // Quaternion accuracy
+    float pitch = 0.0f, yaw = 0.0f, roll= 0.0f; 
+    uint8_t accAccuracy = 0; 
     float accX = 0.0f, accY = 0.0f, accZ = 0.0f; // Accelerometer values
     float gyroX = 0.0f, gyroY = 0.0f, gyroZ = 0.0f; // Gyroscope values
     uint8_t gyroAccuracy = 0.0f; // Gyroscope accuracy
     float angleX = 0.0f, angleY = 0.0f, angleZ = 0.0f; // Angle values
     uint8_t angleAccuracy = 0.0f; // Angle accuracy
 
-    // // Initialize v variables
-    // float v_shank_x = 0.0f, v_shank_y = 0.0f, v_shank_z = 0.0f;
-    // float v_thigh_x = 0.0f, v_thigh_y = 0.0f, v_thigh_z = 0.0f;
-    // float v_IMU_x = 0.0f, v_IMU_y = 0.0f, v_IMU_z = 0.0f;
-    // float v_knee_x = 0.0f, v_knee_y = 0.0f, v_knee_z = 0.0f;
-    // float v_hip_x = 0.0f, v_hip_y = 0.0f, v_hip_z = 0.0f;
-    // vector<float> w_thigh = {0,0,0};
+    // // Initialize v, dt and w variables
+    vector <float> v_IMU= {0,0,0};
+    vector <float> v_shank= {0,0,0};
+    vector <float> v_thigh= {0,0,0};
+    vector <float> v_knee= {0,0,0};
+    vector <float> v_hip= {0,0,0};
+    vector <float> pre_v_shank= {0,0,0};
+    vector <float> pre_v_thigh= {0,0,0};
+    vector <float> pre_v_knee= {0,0,0};
+    vector <float> pre_v_hip= {0,0,0};
+    float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
+    vector <float> w_thigh= {0,0,0};
+    vector <float> w_IMU= {0,0,0};
 
-    // // Initialize acceleration variables
-    // vector<float> a_shank = {0,0,0};
-    // vector<float> a_hip = {0,0,0};
-    // vector<float> a_thigh = {0,0,0};
-    // vector <float> acc = {0,0,0};
+    // Initialize acceleration variables
+    vector <float> a_IMU = {0,0,0};
+    vector<float> a_shank = {0,0,0};
+    vector<float> a_thigh = {0,0,0};
+    vector<float> a_hip = {0,0,0};
+
+    //Initialize angles
+    vector <float> pre_angle_thigh = {0,0,0};
     
-    // Initialize pre variables (not the most efficient way but... :)
-    // float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
-    // float pre_v_shank_x = 0.00f;
-    // float pre_v_shank_y = 0.00f;
-    // float pre_v_shank_z = 0.00f;
-    // float pre_theta_thigh_x = 0.00f;
-    // float pre_theta_thigh_y = 0.00f;
-    // float pre_theta_thigh_z = 0.00f;
-    // float pre_v_thigh_x = 0.00f;
-    // float pre_v_thigh_y = 0.00f;
-    // float pre_v_thigh_z = 0.00f;
-    // float pre_v_hip_x = 0.00f;
-    // float pre_v_hip_y = 0.00f;
-    // float pre_v_hip_z = 0.00f;
     
     while (true) {
         // Read sensor data
         if (IMU.getSensorEvent() == true){
             if (IMU.getSensorEventID() == SENSOR_REPORTID_GAME_ROTATION_VECTOR) {
-                pitch = IMU.getGamePitch();
-                yaw = IMU.getGameYaw();
+                pitch = IMU.getPitch(); // y-axis
+                yaw = IMU.getYaw(); // z-axis
+                roll = IMU.getRoll(); // x-axis
             }
     
             if (IMU.getSensorEventID() == SENSOR_REPORTID_ACCELEROMETER) {
@@ -170,15 +166,11 @@ int main() {
             if (IMU.getSensorEventID() == SENSOR_REPORTID_GYROSCOPE_CALIBRATED) {
                 IMU.getGyro(gyroX, gyroY, gyroZ, gyroAccuracy);
             }
-            // Make sure to get angle with from sensor
-            if (IMU.getSensorEventID() == SENSOR_REPORTID_ROTATION_VECTOR) {
-                IMU.getGyro(angleX, angleY, angleZ, angleAccuracy);
-            }
 
             // Store sensor data in vector
             vector<float> a_IMU = {accX, accY, accZ}; 
             vector<float> w_IMU = {gyroX, gyroY, gyroZ};   
-            vector<float> angle_IMU = {angleX, angleY, angleZ};
+            vector<float> angle_IMU = {roll, pitch, yaw};
 
             vector<float> angle_thigh = estimate_angle_thigh(angle_IMU);
 
@@ -188,32 +180,31 @@ int main() {
             vector <float> L_thigh= calculate_length(angle_thigh, L_thigh_ini);
             vector <float> L_thigh_COM = entrywise_mul(L_thigh, (1-COM_thigh));
 
-            // dt is not initialized, same for v_IMU!!
             // Integrate a_IMU to obtain v_IMU
-            const float dt = 0.000004f;
             vector <float> v_IMU= integrate(a_IMU, v_IMU, dt);
 
             // Calculate velocity and acceleration shank
             vector <float> v_shank = entrywise_add(v_IMU, crossProduct(w_IMU,L_shank_COM));
-            // Not sure about pre
-            vector <float> pre_v_shank={v_shank};
             vector <float> a_shank = differentiate(v_shank, pre_v_shank, a_shank, dt);
 
             // Calculate velocity knee
             vector <float> v_knee= entrywise_add(v_IMU, crossProduct(w_IMU,L_shank));
 
             // Calculate velocity and acceleration thigh
-            vector <float> pre_angle_thigh={angle_thigh};
             vector <float> w_thigh = differentiate(angle_thigh, pre_angle_thigh, w_thigh, dt);
             vector <float> v_thigh= entrywise_add(v_knee, crossProduct(w_thigh,L_thigh_COM));
-            vector <float> pre_v_thigh={v_thigh};
             vector <float> a_thigh = differentiate(v_thigh, pre_v_thigh, a_thigh, dt);
             
             // Calculate velocity and acceleration hip
-
             vector <float> v_hip= entrywise_add(v_knee, crossProduct(w_thigh,L_thigh));
-            vector <float> pre_v_hip={v_hip};
             vector <float> a_hip = differentiate(v_hip, pre_v_hip, a_hip, dt);
+
+            // Assign current value to previous value
+            vector <float> pre_angle_thigh={angle_thigh};
+            vector <float> pre_v_thigh={v_thigh};
+            vector <float> pre_v_hip={v_hip};
+            vector <float> pre_v_shank={v_shank};
+
 
             // Calculate GRF
             vector <float> GRF = calculate_grf(a_IMU, a_thigh, a_hip, m);
