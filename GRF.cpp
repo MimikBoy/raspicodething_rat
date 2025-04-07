@@ -12,6 +12,8 @@ using namespace std;
 #include <iostream>
 #include <bno08x.h>
 #include "utils.h"
+// Test 
+#include "GRF.h"
 
 // I2C Settings
 #define I2C_PORT i2c0
