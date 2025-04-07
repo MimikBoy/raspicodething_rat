@@ -20,6 +20,8 @@ using namespace std;
 #define BNO085_ADDR 0x4C
 
 // Constants
+const float COM_shank = 0.5726;  // Values taken from paper in Zotero
+const float COM_thigh = 0.4095; 
 float L_shank_ini, L_thigh_ini, m; // Defined by user (lower in the code)
 
 // Function to compute the length vectors for shank and thigh
@@ -111,7 +113,9 @@ int main() {
 
     // User input
     std::cin >> L_shank_ini;
+    std::cout << "Enter the Length of Thigh (L_thigh) in meters: ";
     std::cin >> L_thigh_ini;
+    std::cout << "Enter the Total Mass of the Body (m) in kg: ";
     std::cin >> m;
 
     float pitch = 0.0f, yaw = 0.0f, roll= 0.0f; 
@@ -119,6 +123,8 @@ int main() {
     float accX = 0.0f, accY = 0.0f, accZ = 0.0f; // Accelerometer values
     float gyroX = 0.0f, gyroY = 0.0f, gyroZ = 0.0f; // Gyroscope values
     uint8_t gyroAccuracy = 0.0f; // Gyroscope accuracy
+    float angleX = 0.0f, angleY = 0.0f, angleZ = 0.0f; // Angle values
+    uint8_t angleAccuracy = 0.0f; // Angle accuracy
 
     // // Initialize v, dt and w variables
     vector <float> v_IMU= {0,0,0};
@@ -130,6 +136,7 @@ int main() {
     vector <float> pre_v_thigh= {0,0,0};
     vector <float> pre_v_knee= {0,0,0};
     vector <float> pre_v_hip= {0,0,0};
+    float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
     vector <float> w_thigh= {0,0,0};
     vector <float> w_IMU= {0,0,0};
 
@@ -139,13 +146,9 @@ int main() {
     vector<float> a_thigh = {0,0,0};
     vector<float> a_hip = {0,0,0};
 
-    // Initialize angles
+    //Initialize angles
     vector <float> pre_angle_thigh = {0,0,0};
-
-    // Constants
-    const float COM_shank = 0.5726;  // Values taken from paper in Zotero
-    const float COM_thigh = 0.4095;
-    const float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
+    
     
     while (true) {
         // Read sensor data
@@ -163,6 +166,8 @@ int main() {
             if (IMU.getSensorEventID() == SENSOR_REPORTID_GYROSCOPE_CALIBRATED) {
                 IMU.getGyro(gyroX, gyroY, gyroZ, gyroAccuracy);
             }
+            
+            unsigned long timeStamp = IMU.getTimeStamp();
 
             // Store sensor data in vector
             vector<float> a_IMU = {accX, accY, accZ}; 
@@ -201,6 +206,7 @@ int main() {
             vector <float> pre_v_thigh={v_thigh};
             vector <float> pre_v_hip={v_hip};
             vector <float> pre_v_shank={v_shank};
+
 
             // Calculate GRF
             vector <float> GRF = calculate_grf(a_IMU, a_thigh, a_hip, m);
