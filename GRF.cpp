@@ -22,99 +22,70 @@ using namespace std;
 // Constants
 const float COM_shank = 0.5726;  // Values taken from paper in Zotero
 const float COM_thigh = 0.4095; 
-float L_shank, L_thigh, m; // Defined by user (lower in the code)
+float L_shank_ini, L_thigh_ini, m; // Defined by user (lower in the code)
 
 // Function to compute the length vectors for shank and thigh
 vector<float> calculate_length(vector<float> angle, float length){
-    // Shank Length Vector
     float L_x = length * sin(angle[0]);
-    float L_y=0.00f;
-    float L_z= length * cos(angle[2]);
+    float L_y = 0.00f;
+    float L_z = length * cos(angle[2]);
     return {L_x, L_y, L_z};
+}
+
+// Function enrtywise multiplication
+vector<float> entrywise_mul(vector<float> L, float COM){
+    float L_x = L[0] * COM;
+    float L_y = L[1] * COM;
+    float L_z = L[2] * COM;
+    return{L_x, L_y, L_z};
 }
 
 // NOTE THIS IS A PLACEHOLDER:
 // Function to estimate the thigh angle
-vector<float> estimate_angle_thigh(vector<float> angle)
-{   float theta_thigh_x = angle[0];
+vector<float> estimate_angle_thigh(vector<float> angle){   
+    float theta_thigh_x = angle[0];
     float theta_thigh_y = angle[1];
     float theta_thigh_z = angle[2];
     return{theta_thigh_x, theta_thigh_y, theta_thigh_z};
 }
 
-// Function to compute the velocities of shank, knee, thigh, hip
-//void calculate_kinematics(SensorData &data, float &v_shank_x, float &v_shank_y, float &v_shank_z,
-//                        float &v_thigh_x, float &v_thigh_y, float &v_thigh_z, float v_knee_x, 
-//                        float v_knee_y, float v_knee_z, float v_hip_x, float v_hip_y, 
-//                       float v_hip_z, float v_IMU_x, float v_IMU_y, float v_IMU_z,  float dt) {
+// Function to calculate cross product of two 3D vectores
+vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
+    float cross_Px = vect_A[1] * vect_B[2] - vect_A[2] * vect_B[1];
+    float cross_Py = vect_A[2] * vect_B[0] - vect_A[0] * vect_B[2];
+    float cross_Pz = vect_A[0] * vect_B[1] - vect_A[1] * vect_B[0];
+    return {cross_Px, cross_Py, cross_Pz};
+}
 
-
-    //float theta_thigh_x = data.angle_x;  // CHANGE THIS
-    //float theta_thigh_y = data.angle_y; // CHANGE THIS
-    //float theta_thigh_z = data.angle_z; // CHANGE THIS
-
-    // Calculate length vectors for shank and thigh
-    //float L_shank_x, L_shank_z, L_thigh_x, L_thigh_z;
-    //calculate_length_vectors(theta_shank_x, theta_thigh_x, L_shank_x, L_shank_z, L_thigh_x, L_thigh_z);
-
-    // // Integrate acceleration to get v of the IMU
-    // integrate(v_IMU_x, v_IMU_y, v_IMU_z, data, dt);
-
-    // Function to calculate cross product of two 3D vectores
-    vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B) {
-        float cross_Px = vect_A[1] * vect_B[2] - vect_A[2] * vect_B[1];
-        float cross_Py = vect_A[2] * vect_B[0] - vect_A[0] * vect_B[2];
-        float cross_Pz = vect_A[0] * vect_B[1] - vect_A[1] * vect_B[0];
-        return {cross_Px, cross_Py, cross_Pz};
-    }
-
-
-    // Calculate the v of the shank, knee, thigh and hip with cross product approximation
-    // v_shank_x = v_IMU_x + crossProduct(data.gyro_y, L_shank_z * COM_shank, cross_P); //check axis for cross prod
-    // v_shank_y = v_IMU_y + crossProduct(data.gyro_x, L_shank_z * COM_shank, cross_P); //check axis for cross prod
-    // v_shank_z = v_IMU_z + crossProduct(data.gyro_y, L_shank_x * COM_shank, cross_P); //check axis for cross prod
-
-    // v_knee_x = v_IMU_x + crossProduct(data.gyro_z, L_shank_x, cross_P); //check axis for cross prod
-    // v_knee_y = v_IMU_y + crossProduct(data.gyro_z, L_shank_x, cross_P); //check axis for cross prod
-    // v_knee_z = v_IMU_z + crossProduct(data.gyro_z, L_shank_z, cross_P); //check axis for cross prod
-
-    // v_thigh_x = v_knee_x + crossProduct(w_shank_z, (1-COM_thigh) * L_thigh_x, cross_P); //check axis for cross prod
-    // v_thigh_y = v_knee_y + crossProduct(w_shank_z, (1-COM_thigh) * L_thigh_x, cross_P); //check axis for cross prod
-    // v_thigh_z = v_knee_z + crossProduct(w_shank_z, (1-COM_thigh) * L_thigh_z, cross_P); //check axis for cross prod
-    
-    // v_hip_x = v_knee_x + crossProduct(w_thigh_z, L_thigh_x, cross_P); //check axis for cross prod
-    // v_hip_y = v_knee_y + crossProduct(w_thigh_z, L_thigh_x, cross_P); //check axis for cross prod
-    // v_hip_z = v_knee_z + crossProduct(w_thigh_z, L_thigh_z, cross_P); //check axis for cross prod
-
-
-    // Function to integrate 
+    // Function to integrate
+    // This does have a problem that it does not now the initial bx, by, bz
     vector <float> integrate(vector <float> a, float dt){
-        float bx += a[0] * dt;
-        float by += a[1] * dt;
-        float bz += a[2] * dt;
-    return {bx,by,bz};
+        float bx += (a[0] * dt);
+        float by += (a[1] * dt);
+        float bz += (a[2] * dt);
+    return {bx, by, bz};
     }
 
+    // This does have a problem that it does not now the initial bx, by, bz
     // Function to differentiate
     vector <float> differentiate(vector <float> a, vector <float> pre_a, float dt){
-        float bx += (pre_a[0] - a[0]) / dt;
-        float by += (pre_a[1] - a[1]) / dt;
-        float bz += (pre_a[2] - a[2]) / dt;
-    return {bx,by,bz};
+        float bx += ((pre_a[0] - a[0]) / dt);
+        float by += ((pre_a[1] - a[1]) / dt);
+        float bz += ((pre_a[2] - a[2]) / dt);
+    return {bx, by, bz};
     }
 
-    
-
     // Function to calculate GRF
-    void calculate_grf(float m_shank, float m_thigh, float a_shank, float a_thigh, 
-        float a_hip, float g, float &F_shank, float &F_thigh, float &F_hip, float &F_ground) {
-        F_shank = m_shank * (a_shank - g);
-        F_thigh = m_thigh * (a_thigh - g);
-        F_hip = m_hip * (a_hip - g);       
-        F_ground = F_shank + F_thigh + F_hip;
-
-    std::cout << "GRF: " << F_ground << " N" << std::endl;
-    } 
+    vector <float> calculate_grf(vector <float> a_shank, vector <float> a_thigh, vector <float> a_hip, float m){
+        float m_shank = 0.057*m;
+        float m_thigh = 0.1416*m;
+        float m_hip = 0.5*0.6028*m;
+        float g = 9.81;
+        float grf_x = m_shank*(a_shank[0]-g) + m_thigh*(a_thigh[0]-g) + m_hip*(a_hip[0]-g);
+        float grf_y = m_shank*(a_shank[1]-g) + m_thigh*(a_thigh[1]-g) + m_hip*(a_hip[1]-g);
+        float grf_z = m_shank*(a_shank[2]-g) + m_thigh*(a_thigh[2]-g) + m_hip*(a_hip[2]-g);
+        return {grf_x, grf_y, grf_z};
+    }
 
 int main() {
     i2c_inst_t* i2c_port0;
@@ -133,9 +104,9 @@ int main() {
     IMU.enableGyro(2500);
 
     // User input
-    std::cin >> L_shank;
+    std::cin >> L_shank_ini;
     std::cout << "Enter the Length of Thigh (L_thigh) in meters: ";
-    std::cin >> L_thigh;
+    std::cin >> L_thigh_ini;
     std::cout << "Enter the Total Mass of the Body (m) in kg: ";
     std::cin >> m;
 
@@ -144,6 +115,8 @@ int main() {
     float accX = 0.0f, accY = 0.0f, accZ = 0.0f; // Accelerometer values
     float gyroX = 0.0f, gyroY = 0.0f, gyroZ = 0.0f; // Gyroscope values
     uint8_t gyroAccuracy = 0.0f; // Gyroscope accuracy
+    float angleX = 0.0f, angleY = 0.0f, angleZ = 0.0f; // Angle values
+    uint8_t angleAccuracy = 0.0f; // Angle accuracy
 
     // // Initialize v variables
     // float v_shank_x = 0.0f, v_shank_y = 0.0f, v_shank_z = 0.0f;
@@ -189,71 +162,52 @@ int main() {
             if (IMU.getSensorEventID() == SENSOR_REPORTID_GYROSCOPE_CALIBRATED) {
                 IMU.getGyro(gyroX, gyroY, gyroZ, gyroAccuracy);
             }
+            // Does this get the sensor data?
+            if (IMU.getSensorEventID() == SENSOR_REPORTID_GYROSCOPE_CALIBRATED) {
+                IMU.getGyro(angleX, angleY, angleZ, angleAccuracy);
+            }
+
             // Store sensor data in vector
-            vector<float> a_IMU = {data.accel_x, data.accel_y, data.accel_z}; 
-            vector<float> w_IMU = {data.gyro_x, data.gyro_y, data.gyro_z};   
-            vector<float> angle_IMU = {data.angle_x, data.angle_y, data.angle_z};
+            vector<float> a_IMU = {accX, accY, accZ}; 
+            vector<float> w_IMU = {gyroX, gyroY, gyroZ};   
+            vector<float> angle_IMU = {angleX, angleY, angleZ};
 
             vector<float> angle_thigh = estimate_angle_thigh(angle_IMU);
 
             // Calculate Length vectors
-            vector <float> L_shank= calculate_length(angle_IMU, L_shank);
-            vector <float> L_thigh= calculate_length(angle_thigh, L_thigh);
+            vector <float> L_shank= calculate_length(angle_IMU, L_shank_ini);
+            vector <float> L_shank_COM = entrywise_mul(L_shank, COM_shank);
+            vector <float> L_thigh= calculate_length(angle_thigh, L_thigh_ini);
+            vector <float> L_thigh_COM = entrywise_mul(L_thigh, (1-COM_thigh));
 
+            // dt is not defined properly!!
             // Integrate a_IMU to obtain v_IMU
             vector <float> v_IMU= integrate(a_IMU, dt);
 
-            // Calculate velocities with cross product function
-            vector <float> v_shank= v_IMU + crossProduct(w_IMU,L_shank*COM_shank);
-            vector <float> v_knee= v_IMU + crossProduct(w_IMU,L_shank);
-            vector <float> v_thigh= v_knee + crossProduct(w_thigh,L_thigh*(1-COM_thigh));
-            vector <float> v_hip= v_knee + crossProduct(w_thigh,L_thigh);
-
-            // Differentiate shank v to obtain a_shank 
-            differentiate(v_shank_x, v_shank_y, v_shank_z, pre_v_shank_x,
-                pre_v_shank_y, pre_v_shank_z, dt, a_shank);
-
-            // Differentiate theta thigh to obtain w_thigh
-            differentiate(theta_thigh_x, theta_thigh_y, theta_thigh_z, pre_theta_thigh_x,
-                pre_theta_thigh_y, pre_theta_thigh_z, dt, w_thigh);
-                
-            // Differentiate v thigh to obtain a_thigh
-            differentiate(v_thigh_x, v_thigh_y, v_thigh_z, pre_v_thigh_x,
-                pre_v_thigh_y, pre_v_thigh_z, dt, a_thigh);
-
-            // Differentiate v hip to obtain a_hip
-            differentiate(v_hip_x, v_hip_y, v_hip_z, pre_v_hip_x,
-                pre_v_hip_y, pre_v_hip_z, dt, a_hip); 
-            
-            
+            // Calculate velocity and acceleration shank
+            vector <float> v_shank = v_IMU + crossProduct(w_IMU,L_shank_COM);
+            // Not sure about pre
             vector <float> pre_v_shank={v_shank};
+            vector <float> a_shank = differentiate(v_shank, pre_v_shank, dt);
+
+            // Calculate velocity knee
+            vector <float> v_knee= v_IMU + crossProduct(w_IMU,L_shank);
+
+            // Calculate velocity and acceleration thigh
+            vector <float> pre_angle_thigh={angle_thigh};
+            vector <float> w_thigh = differentiate(angle_thigh, pre_angle_thigh, dt);
+            vector <float> v_thigh= v_knee + crossProduct(w_thigh,L_thigh_COM);
             vector <float> pre_v_thigh={v_thigh};
-            vector <float> pre_v_hip={v_hip}; 
-            vector <float> pre_v_knee={v_knee};   
-            // pre_v_shank_x= v_shank_x;
-            // pre_v_shank_y= v_shank_y;
-            // pre_v_shank_z= v_shank_z;
+            vector <float> a_thigh = differentiate(v_thigh, pre_v_thigh, dt);
+            
+            // Calculate velocity and acceleration hip
+            vector <float> v_hip= v_knee + crossProduct(w_thigh,L_thigh);
+            vector <float> pre_v_hip={v_hip};
+            vector <float> a_hip = differentiate(v_hip, pre_v_hip, dt);
 
-            // pre_theta_thigh_x= theta_thigh_x;
-            // pre_theta_thigh_y= theta_thigh_y;
-            // pre_theta_thigh_z= theta_thigh_z;
-
-            // pre_v_thigh_x= v_thigh_x;
-            // pre_v_thigh_y= v_thigh_y;
-            // pre_v_thigh_z= v_thigh_z;
-
-            // pre_v_hip_x= v_hip_x;
-            // pre_v_hip_y= v_hip_y;
-            // pre_v_hip_z= v_hip_z;    
+            // Calculate GRF
+            vector <float> GRF = calculate_grf(a_IMU, a_thigh, a_hip, m);
         }
-
-        // Calculate velocities for shank and thigh
-        calculate_kinematics(data, v_shank_x, v_shank_y, v_shank_z, 
-                           v_thigh_x, v_thigh_y, v_thigh_z, v_IMU_x, 
-                           v_IMU_y, v_IMU_z, dt);
-    
-        // Calculate GRF
-        calculate_grf(m * COM_shank, m * COM_thigh, a_shank, a_thigh, a_hip, 9.81f);  // Using 9.81m/s^2 for gravity
 
         sleep_ms(4);  // Sleep 4 mili sec until next sample to be taken
     }
