@@ -206,7 +206,6 @@ int main() {
             vector <float> pre_v_hip={v_hip};
             vector <float> pre_v_shank={v_shank};
 
-
             // Calculate GRF
             vector <float> GRF = calculate_grf(a_IMU, a_thigh, a_hip, m);
         }
@@ -216,7 +215,3 @@ int main() {
 
     return 0;
 }
-
-//Make sure pins match datasheet. Vlad
-//Calibration?
-//Axis in cross product and variables in general
