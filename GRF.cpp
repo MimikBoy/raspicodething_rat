@@ -157,6 +157,7 @@ int main() {
     vector <float> pre_v_hip= {0,0,0};
     vector <float> w_thigh= {0,0,0};
     vector <float> w_IMU= {0,0,0};
+    vector <float> angle2= {0,0,0};
 
     // Initialize acceleration variables
     vector <float> a_IMU = {0,0,0};
@@ -208,6 +209,8 @@ int main() {
             printf("a IMU X %f\n a IMU Y %f\n a IMU Z %f\n", a_IMU[0], a_IMU[1], a_IMU[2]);
             vector<float> w_IMU = {gyroX, gyroY, gyroZ};
             printf("w IMU X %f\n w IMU Y %f\n w IMU Z %f\n", w_IMU[0], w_IMU[1], w_IMU[2]);  
+            vector <float> angleX2=integrate(w_IMU, angleX2, dt);
+            printf("Angle X2 %f\n Angle Y2 %f\n Angle Z2 %f\n", angleX2[0], angleX2[1], angleX2[2]);
             vector<float> angle_IMU = {roll, pitch, yaw};
             printf("Angle IMU X %f\n Angle IMU Y %f\n Angle IMU Z %f\n", angle_IMU[0], angle_IMU[1], angle_IMU[2]);
             
@@ -216,15 +219,15 @@ int main() {
 
             // Calculate Length vectors
             vector <float> L_shank= calculate_length(angle_IMU, L_shank_ini);
-            printf("L shank X %f\n L shank Y %f\n L shank Z %f\n", L_shank[0], L_shank[1], L_shank[2]);
+            //printf("L shank X %f\n L shank Y %f\n L shank Z %f\n", L_shank[0], L_shank[1], L_shank[2]);
             vector <float> L_shank_COM = entrywise_mul(L_shank, COM_shank);
-            printf("L shank X COM %f\n L shank Y COM %f\n L shank Z COM %f\n", L_shank_COM[0], L_shank_COM[1], L_shank_COM[2]);
+            //printf("L shank X COM %f\n L shank Y COM %f\n L shank Z COM %f\n", L_shank_COM[0], L_shank_COM[1], L_shank_COM[2]);
             vector <float> L_thigh= calculate_length(angle_thigh, L_thigh_ini);
             vector <float> L_thigh_COM = entrywise_mul(L_thigh, (1-COM_thigh));
 
             // Integrate a_IMU to obtain v_IMU
             vector <float> v_IMU= integrate(a_IMU, v_IMU, dt);
-
+            printf("v_IMU X %f\n v_IMU Y %f\n v_IMU Z %f\n", v_IMU[0], v_IMU[1], v_IMU[2]);
             // Calculate velocity and acceleration shank
             vector <float> v_shank = entrywise_add(v_IMU, crossProduct(w_IMU,L_shank_COM));
             vector <float> a_shank = differentiate(v_shank, pre_v_shank, a_shank, dt);
