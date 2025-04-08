@@ -136,7 +136,7 @@ int main() {
     // std::cin >> L_thigh_ini;
     // std::cin >> m;
     const float L_shank_ini=40.0; const float L_thigh_ini=50.0; const float m=75.0;
-
+    printf("L_shank_ini %f\n", L_shank_ini);
     float pitch = 0.0f, yaw = 0.0f, roll= 0.0f; 
     uint8_t accAccuracy = 0; 
     float accX = 0.0f, accY = 0.0f, accZ = 0.0f; // Accelerometer values
