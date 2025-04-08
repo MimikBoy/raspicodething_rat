@@ -66,7 +66,6 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
 }
 
     // Function to integrate
-    // This does have a problem that it does not now the initial bx, by, bz
     vector <float> integrate(vector <float> a, vector <float> b, float dt){
         float bx = b[0] + (a[0] * dt);
         float by = b[1] + (a[1] * dt);
@@ -74,7 +73,6 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
     return {bx, by, bz};
     }
 
-    // This does have a problem that it does not now the initial bx, by, bz
     // Function to differentiate
     vector <float> differentiate(vector <float> a, vector <float> pre_a, vector <float> b, float dt){
         float bx = b[0] + ((pre_a[0] - a[0]) / dt);
