@@ -26,9 +26,9 @@ float L_shank_ini, L_thigh_ini, m; // Defined by user (lower in the code)
 
 // Function to compute the length vectors for shank and thigh
 vector<float> calculate_length(vector<float> angle, float length){
-    float L_x = length * sin(angle[0]);
+    float L_x = length * sin(angle[0]* M_PI / 180.0);
     float L_y = 0.00f;
-    float L_z = length * cos(angle[2]);
+    float L_z = length * cos(angle[2]* M_PI / 180.0);
     return {L_x, L_y, L_z};
 }
 
