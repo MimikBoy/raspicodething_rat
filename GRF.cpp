@@ -218,6 +218,7 @@ int main() {
             vector <float> L_shank= calculate_length(angle_IMU, L_shank_ini);
             printf("L shank X %f\n L shank Y %f\n L shank Z %f\n", L_shank[0], L_shank[1], L_shank[2]);
             vector <float> L_shank_COM = entrywise_mul(L_shank, COM_shank);
+            printf("L shank X COM %f\n L shank Y COM %f\n L shank Z COM %f\n", L_shank_COM[0], L_shank_COM[1], L_shank_COM[2]);
             vector <float> L_thigh= calculate_length(angle_thigh, L_thigh_ini);
             vector <float> L_thigh_COM = entrywise_mul(L_thigh, (1-COM_thigh));
 
