@@ -37,21 +37,21 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(raspicodething_rat raspicodething_rat.cpp )
+add_executable(GRF GRF.cpp )
 
-pico_set_program_name(raspicodething_rat "raspicodething_rat")
-pico_set_program_version(raspicodething_rat "0.1")
+pico_set_program_name(GRF "GRF.cpp") 
+pico_set_program_version(GRF "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(raspicodething_rat 0)
-pico_enable_stdio_usb(raspicodething_rat 0)
+pico_enable_stdio_uart(GRF 0)
+pico_enable_stdio_usb(GRF 1)
 
 # Add the standard library to the build
-target_link_libraries(raspicodething_rat
+target_link_libraries(GRF
         pico_stdlib)
 
 # Add the standard include files to the build
-target_include_directories(raspicodething_rat PRIVATE
+target_include_directories(GRF PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
 )
 
@@ -61,10 +61,10 @@ add_subdirectory(
 
 
 # Add any user requested libraries
-target_link_libraries(raspicodething_rat 
+target_link_libraries(GRF 
         pico_cyw43_arch_none
         BNO08x_Pico_Library
         )
 
-pico_add_extra_outputs(raspicodething_rat)
+pico_add_extra_outputs(GRF)
 

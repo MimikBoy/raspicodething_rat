@@ -1,13 +1,13 @@
+#include "pico/stdlib.h"
 #include <stdio.h>
-#include <math.h>
+#include "math.h"
 #include <iostream>
 #include <vector>
 #include "hardware/i2c.h"
-#include "pico/stdlib.h"
 using namespace std;
-
-#include "pico/stdlib.h"
-#include "hardware/i2c.h"
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 #include <cmath>
 #include <iostream>
 #include <bno08x.h>
@@ -95,26 +95,46 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         return {grf_x, grf_y, grf_z};
     }
 
+// int main() {
+//     i2c_inst_t* i2c_port0=i2c0;
+//     initI2C(i2c_port0, false);
+
+//     BNO08x IMU;
+
+//     while (IMU.begin(CONFIG::BNO08X_ADDR, i2c_port0)==false) {
+//         printf("BNO08x not detected at default I2C address. Check wiring. Freezing\n");
+//         scan_i2c_bus();
+//         sleep_ms(1000);
+//     }
+
+//     IMU.enableAccelerometer(2500);
+//     IMU.enableGameRotationVector(2500);
+//     IMU.enableGyro(2500);
 int main() {
-    i2c_inst_t* i2c_port0;
+    stdio_init_all();
+
+    i2c_inst_t* i2c_port0 = i2c0;
     initI2C(i2c_port0, false);
 
     BNO08x IMU;
 
-    while (IMU.begin(CONFIG::BNO08X_ADDR, i2c_port0)==false) {
-        printf("BNO08x not detected at default I2C address. Check wiring. Freezing\n");
+    while (!IMU.begin(0x4A, i2c_port0)) {
+        printf("BNO08x not detected. Freezing...\n");
         scan_i2c_bus();
         sleep_ms(1000);
     }
 
-    IMU.enableAccelerometer(2500);
-    IMU.enableGameRotationVector(2500);
-    IMU.enableGyro(2500);
+    if (!IMU.enableGameRotationVector(100)) {
+        printf("Failed to enable Game Rotation Vector!\n");
+    }
 
+    const float RAD_TO_DEG = 180.0f / M_PI;
+    //float yaw = 0.0f, pitch = 0.0f, roll = 0.0f;
     // User input
-    std::cin >> L_shank_ini;
-    std::cin >> L_thigh_ini;
-    std::cin >> m;
+    // std::cin >> L_shank_ini;
+    // std::cin >> L_thigh_ini;
+    // std::cin >> m;
+    const float L_shank_ini=40.0; const float L_thigh_ini=50.0; const float m=75.0;
 
     float pitch = 0.0f, yaw = 0.0f, roll= 0.0f; 
     uint8_t accAccuracy = 0; 
@@ -151,38 +171,68 @@ int main() {
     const float COM_thigh = 0.4095;
     const float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
 
-    while (true) {
+    while (true) 
+    {
         // Read sensor data
-        if (IMU.getSensorEvent() == true){
-            if (IMU.getSensorEventID() == SENSOR_REPORTID_GAME_ROTATION_VECTOR) {
-                pitch = IMU.getPitch(); // y-axis
-                yaw = IMU.getYaw(); // z-axis
-                roll = IMU.getRoll(); // x-axis
-            }
-    
-            if (IMU.getSensorEventID() == SENSOR_REPORTID_ACCELEROMETER) {
-                IMU.getAccel(accX, accY, accZ, accAccuracy);
-            }
+            if (IMU.getSensorEvent() == true){
+            //if (IMU.getSensorEventID() == SENSOR_REPORTID_GAME_ROTATION_VECTOR) {
+            //     pitch = IMU.getGamePitch(); // y-axis
+            //     yaw = IMU.getGameYaw(); // z-axis
+            //     roll = IMU.getRoll(); // x-axis
+            // }
+           
+            yaw = IMU.getGameYaw() * RAD_TO_DEG;
+            pitch = IMU.getGamePitch() * RAD_TO_DEG;
+            roll = IMU.getRoll() * RAD_TO_DEG;
+            printf("Pitch y-axis %f\n",pitch);
+            printf("Yaw z-axis %f\n",yaw);
+            printf("Roll x-axis %f\n",roll);
+            // Optional: print quaternions
+            float qi = IMU.getGameQuatI();
+            float qj = IMU.getGameQuatJ();
+            float qk = IMU.getGameQuatK();
+            float qr = IMU.getGameQuatReal();
+            printf("Quat: i=%.2f, j=%.2f, k=%.2f, r=%.2f\n", qi, qj, qk, qr);
 
+            accX = IMU.getAccelX();
+            accY = IMU.getAccelY();
+            accZ = IMU.getAccelZ();
+
+            gyroX = IMU.getGyroX();
+            gyroY = IMU.getGyroY();
+            gyroZ = IMU.getGyroZ();
+            
+            }
+            // if (IMU.getSensorEventID() == SENSOR_REPORTID_ACCELEROMETER) {
+            // //if (IMU.getSensorEvent() == true){
+            //     IMU.getAccel(accX, accY, accZ, accAccuracy);
+            //     accX = IMU.getAccelX();
+            // }
+            printf("Acc X IMU %f\n", accX);
+            printf("Acc Y IMU %f\n", accY);
+            printf("Acc z IMU %f\n", accZ);
             if (IMU.getSensorEventID() == SENSOR_REPORTID_GYROSCOPE_CALIBRATED) {
                 IMU.getGyro(gyroX, gyroY, gyroZ, gyroAccuracy);
             }
-            
+            printf("w X IMU %f\n", gyroX);
+            printf("w Y IMU %f\n", gyroY);
+            printf("w z IMU %f\n", gyroZ);
             unsigned long timeStamp = IMU.getTimeStamp();
-
+            //printf("timeStamp %f\n", timeStamp);
             // Store sensor data in vector
             vector<float> a_IMU = {accX, accY, accZ}; 
             vector<float> w_IMU = {gyroX, gyroY, gyroZ};   
             vector<float> angle_IMU = {roll, pitch, yaw};
 
             vector<float> angle_thigh = estimate_angle_thigh(angle_IMU);
-
+            //printf("angle IMU %f\n", angle_IMU);
             // Calculate Length vectors
             vector <float> L_shank= calculate_length(angle_IMU, L_shank_ini);
             vector <float> L_shank_COM = entrywise_mul(L_shank, COM_shank);
             vector <float> L_thigh= calculate_length(angle_thigh, L_thigh_ini);
             vector <float> L_thigh_COM = entrywise_mul(L_thigh, (1-COM_thigh));
-
+            //printf("L_shank %f\n", L_shank);
+           
             // Integrate a_IMU to obtain v_IMU
             vector <float> v_IMU= integrate(a_IMU, v_IMU, dt);
 
@@ -201,7 +251,8 @@ int main() {
             // Calculate velocity and acceleration hip
             vector <float> v_hip= entrywise_add(v_knee, crossProduct(w_thigh,L_thigh));
             vector <float> a_hip = differentiate(v_hip, pre_v_hip, a_hip, dt);
-
+            //printf("Acceleration hip %f\n",a_hip);
+            //printf("Velocity hip %f\n",v_hip);
             // Assign current value to previous value
             vector <float> pre_angle_thigh={angle_thigh};
             vector <float> pre_v_thigh={v_thigh};
@@ -210,12 +261,10 @@ int main() {
 
             // Calculate GRF
             vector <float> GRF = calculate_grf(a_IMU, a_thigh, a_hip, m);
-
             // Return GRF and timestamp here
-        }
-
-        sleep_ms(4);  // Sleep 4 mili sec until next sample to be taken
-    }
+            //printf("GRF %f\n",GRF);
+        sleep_ms(500);  // Sleep 4 mili sec until next sample to be taken
+        } 
 
     return 0;
 }
