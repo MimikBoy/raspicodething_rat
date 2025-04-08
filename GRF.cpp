@@ -180,56 +180,46 @@ int main() {
             yaw = IMU.getGameYaw() * RAD_TO_DEG;
             pitch = IMU.getGamePitch() * RAD_TO_DEG;
             roll = IMU.getRoll() * RAD_TO_DEG;
-            printf("Pitch y-axis %f\n",pitch);
-            printf("Yaw z-axis %f\n",yaw);
-            printf("Roll x-axis %f\n",roll);
+            printf("Roll X %f\n Pitch Y %f\n Yaw Z %f\n", roll, pitch, yaw);
 
-            // Optional: print quaternions
-            float qi = IMU.getGameQuatI();
-            float qj = IMU.getGameQuatJ();
-            float qk = IMU.getGameQuatK();
-            float qr = IMU.getGameQuatReal();
-            //printf("Quat: i=%.2f, j=%.2f, k=%.2f, r=%.2f\n", qi, qj, qk, qr);
+            // // Optional: print quaternions
+            // float qi = IMU.getGameQuatI();
+            // float qj = IMU.getGameQuatJ();
+            // float qk = IMU.getGameQuatK();
+            // float qr = IMU.getGameQuatReal();
+            // //printf("Quat: i=%.2f, j=%.2f, k=%.2f, r=%.2f\n", qi, qj, qk, qr);
 
             accX = IMU.getAccelX();
             accY = IMU.getAccelY();
             accZ = IMU.getAccelZ();
+            printf("Acc X IMU %f\n Acc Y IMU %f\n Acc Z IMU %f\n", accX, accY, accZ);
 
             gyroX = IMU.getGyroX();
             gyroY = IMU.getGyroY();
             gyroZ = IMU.getGyroZ();
+            printf("w X IMU %f\n w Y IMU %f\n w Z IMU %f\n", gyroX, gyroY, gyroZ);
 
             float timeStamp = IMU.getTimeStamp();
             printf("timeStamp %f\n", timeStamp);
             }
-      
-            printf("Acc X IMU %f\n", accX);
-            printf("Acc Y IMU %f\n", accY);
-            printf("Acc z IMU %f\n", accZ);
-        
-            printf("w X IMU %f\n", gyroX);
-            printf("w Y IMU %f\n", gyroY);
-            printf("w z IMU %f\n", gyroZ);
  
             // Store sensor data in vector
-            vector<float> a_IMU = {accX, accY, accZ}; 
-            vector<float> w_IMU = {gyroX, gyroY, gyroZ};   
+            vector<float> a_IMU = {accX, accY, accZ};
+            printf("a IMU X %f\n a IMU Y %f\n a IMU Z %f\n", a_IMU[0], a_IMU[1], a_IMU[2]);
+            vector<float> w_IMU = {gyroX, gyroY, gyroZ};
+            printf("w IMU X %f\n w IMU Y %f\n w IMU Z %f\n", w_IMU[0], w_IMU[1], w_IMU[2]);  
             vector<float> angle_IMU = {roll, pitch, yaw};
-            printf("Angle IMU %f\n, %f\n, %f\n", angle_IMU[0], angle_IMU[1], angle_IMU[2]);
+            printf("Angle IMU X %f\n Angle IMU Y %f\n Angle IMU Z %f\n", angle_IMU[0], angle_IMU[1], angle_IMU[2]);
             
             vector<float> angle_thigh = estimate_angle_thigh(angle_IMU);
-            //printf("angle IMU %f\n", angle_IMU);
+            printf("Angle thigh X %f\n Angle thigh Y %f\n Angle thigh Z %f\n", angle_thigh[0], angle_thigh[1], angle_thigh[2]);
 
             // Calculate Length vectors
             vector <float> L_shank= calculate_length(angle_IMU, L_shank_ini);
+            printf("L shank X %f\n L shank Y %f\n L shank Z %f\n", L_shank[0], L_shank[1], L_shank[2]);
             vector <float> L_shank_COM = entrywise_mul(L_shank, COM_shank);
             vector <float> L_thigh= calculate_length(angle_thigh, L_thigh_ini);
             vector <float> L_thigh_COM = entrywise_mul(L_thigh, (1-COM_thigh));
-            printf("L_shank %f\n", L_shank);
-            //printf("L_shank_COM %f\n", L_shank_COM);
-            //printf("L_thigh %f\n", L_thigh);
-            //printf("L_thigh_COM %f\n", L_thigh_COM);
-            printf("Initial shank length %f\n", L_shank_ini);
 
             // Integrate a_IMU to obtain v_IMU
             vector <float> v_IMU= integrate(a_IMU, v_IMU, dt);
