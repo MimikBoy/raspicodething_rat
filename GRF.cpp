@@ -155,7 +155,7 @@ int main() {
     vector <float> pre_v_thigh= {0,0,0};
     vector <float> pre_v_knee= {0,0,0};
     vector <float> pre_v_hip= {0,0,0};
-    vector <float> pre_v_IMU2= {0,0,0};
+    //vector <float> pre_v_IMU2= {0,0,0};
     vector <float> w_thigh= {0,0,0};
     vector <float> w_IMU= {0,0,0};
 
@@ -164,7 +164,7 @@ int main() {
     vector<float> a_shank = {0,0,0};
     vector<float> a_thigh = {0,0,0};
     vector<float> a_hip = {0,0,0};
-    vector<float> a_IMU2={0,0,0};
+    //vector<float> a_IMU2={0,0,0};
 
     //Initialize angles
     vector <float> pre_angle_thigh = {0,0,0};
@@ -226,8 +226,8 @@ int main() {
 
             // Integrate a_IMU to obtain v_IMU
             vector <float> v_IMU= integrate(a_IMU, v_IMU, dt);
-            vector <float> a_IMU2= differentiate(v_IMU, pre_v_IMU2, a_IMU2, dt);
-            printf("a IMU2 X %f\n a IMU2 Y %f\n a IMU2 Z %f\n", a_IMU2[0], a_IMU2[1], a_IMU2[2]);
+            //vector <float> a_IMU2= differentiate(v_IMU, pre_v_IMU2, a_IMU2, dt);
+            //printf("a IMU2 X %f\n a IMU2 Y %f\n a IMU2 Z %f\n", a_IMU2[0], a_IMU2[1], a_IMU2[2]);
             
 
             // Calculate velocity and acceleration shank
@@ -252,7 +252,7 @@ int main() {
             vector <float> pre_v_thigh={v_thigh};
             vector <float> pre_v_hip={v_hip};
             vector <float> pre_v_shank={v_shank};
-            vector <float> pre_v_IMU2= {v_IMU};
+           //vector <float> pre_v_IMU2= {v_IMU};
             // Calculate GRF
             vector <float> GRF = calculate_grf(a_IMU, a_thigh, a_hip, m);
             // Return GRF and timestamp here
