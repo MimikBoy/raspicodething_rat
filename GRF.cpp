@@ -155,12 +155,15 @@ int main() {
     vector <float> pre_v_thigh= {0,0,0};
     vector <float> pre_v_knee= {0,0,0};
     vector <float> pre_v_hip= {0,0,0};
+    vector <float> pre_v_IMU= {0,0,0};
+
     vector <float> w_thigh= {0,0,0};
     vector <float> w_IMU= {0,0,0};
-    vector <float> angle2= {0,0,0};
+    vector <float> angleX2= {0,0,0};
 
     // Initialize acceleration variables
     vector <float> a_IMU = {0,0,0};
+    vector <float> a_IMU2 = {0,0,0};
     vector<float> a_shank = {0,0,0};
     vector<float> a_thigh = {0,0,0};
     vector<float> a_hip = {0,0,0};
@@ -228,6 +231,11 @@ int main() {
             // Integrate a_IMU to obtain v_IMU
             vector <float> v_IMU= integrate(a_IMU, v_IMU, dt);
             printf("v_IMU X %f\n v_IMU Y %f\n v_IMU Z %f\n", v_IMU[0], v_IMU[1], v_IMU[2]);
+            // Test integrate differentiate
+            vector <float> a_IMU2= differentiate(v_IMU, pre_v_IMU, a_IMU2, dt);
+
+            pre_v_IMU = {v_IMU};
+
             // Calculate velocity and acceleration shank
             vector <float> v_shank = entrywise_add(v_IMU, crossProduct(w_IMU,L_shank_COM));
             vector <float> a_shank = differentiate(v_shank, pre_v_shank, a_shank, dt);
