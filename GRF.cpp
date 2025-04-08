@@ -180,12 +180,13 @@ int main() {
             printf("Pitch y-axis %f\n",pitch);
             printf("Yaw z-axis %f\n",yaw);
             printf("Roll x-axis %f\n",roll);
+
             // Optional: print quaternions
             float qi = IMU.getGameQuatI();
             float qj = IMU.getGameQuatJ();
             float qk = IMU.getGameQuatK();
             float qr = IMU.getGameQuatReal();
-            printf("Quat: i=%.2f, j=%.2f, k=%.2f, r=%.2f\n", qi, qj, qk, qr);
+            //printf("Quat: i=%.2f, j=%.2f, k=%.2f, r=%.2f\n", qi, qj, qk, qr);
 
             accX = IMU.getAccelX();
             accY = IMU.getAccelY();
@@ -211,16 +212,22 @@ int main() {
             vector<float> a_IMU = {accX, accY, accZ}; 
             vector<float> w_IMU = {gyroX, gyroY, gyroZ};   
             vector<float> angle_IMU = {roll, pitch, yaw};
-
+            printf("Angle IMU X %f\n", angle_IMU[0]);
+            
             vector<float> angle_thigh = estimate_angle_thigh(angle_IMU);
             //printf("angle IMU %f\n", angle_IMU);
+
             // Calculate Length vectors
             vector <float> L_shank= calculate_length(angle_IMU, L_shank_ini);
             vector <float> L_shank_COM = entrywise_mul(L_shank, COM_shank);
             vector <float> L_thigh= calculate_length(angle_thigh, L_thigh_ini);
             vector <float> L_thigh_COM = entrywise_mul(L_thigh, (1-COM_thigh));
             printf("L_shank %f\n", L_shank);
-           
+            //printf("L_shank_COM %f\n", L_shank_COM);
+            //printf("L_thigh %f\n", L_thigh);
+            //printf("L_thigh_COM %f\n", L_thigh_COM);
+            printf("Initial shank length %f\n", L_shank_ini);
+
             // Integrate a_IMU to obtain v_IMU
             vector <float> v_IMU= integrate(a_IMU, v_IMU, dt);
 
