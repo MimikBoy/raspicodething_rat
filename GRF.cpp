@@ -65,19 +65,27 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
     return {cross_Px, cross_Py, cross_Pz};
 }
 
-    // Function to integrate
-    vector <float> integrate(vector <float> a, vector <float> b, float dt){
-        float bx = b[0] + (a[0] * dt);
-        float by = b[1] + (a[1] * dt);
-        float bz = b[2] + (a[2] * dt);
-    return {bx, by, bz};
+    // // Function to integrate
+    // vector <float> integrate(vector <float> a, vector <float> b, float dt){
+    //     float bx = b[0] + (a[0] * dt);
+    //     float by = b[1] + (a[1] * dt);
+    //     float bz = b[2] + (a[2] * dt);
+    // return {bx, by, bz};
+    // }
+
+    // Function to integrate 
+    vector<float> integrate(vector<float> a, vector<float> pre_a, vector<float> v, float dt) {
+        float vx = v[0] + 0.5f * (a[0] + pre_a[0]) * dt;
+        float vy = v[1] + 0.5f * (a[1] + pre_a[1]) * dt;
+        float vz = v[2] + 0.5f * (a[2] + pre_a[2]) * dt;
+        return {vx, vy, vz};
     }
 
     // Function to differentiate
-    vector <float> differentiate(vector <float> a, vector <float> pre_a, vector <float> b, float dt){
-        float bx = b[0] + ((pre_a[0] - a[0]) / dt);
-        float by = b[1] + ((pre_a[1] - a[1]) / dt);
-        float bz = b[2] + ((pre_a[2] - a[2]) / dt);
+    vector <float> differentiate(vector <float> a, vector <float> pre_a, float dt){
+        float bx = (a[0] - pre_a[0]) / dt;
+        float by = (a[1] - pre_a[1]) / dt;
+        float bz = (a[2] - pre_a[2]) / dt;
     return {bx, by, bz};
     }
 
