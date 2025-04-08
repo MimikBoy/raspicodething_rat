@@ -1,6 +1,6 @@
 #include "pico/stdlib.h"
 #include <stdio.h>
-#include "math.h"
+#include <math.h>
 #include <iostream>
 #include <vector>
 #include "hardware/i2c.h"
@@ -173,12 +173,7 @@ int main() {
     {
         // Read sensor data
             if (IMU.getSensorEvent() == true){
-            //if (IMU.getSensorEventID() == SENSOR_REPORTID_GAME_ROTATION_VECTOR) {
-            //     pitch = IMU.getGamePitch(); // y-axis
-            //     yaw = IMU.getGameYaw(); // z-axis
-            //     roll = IMU.getRoll(); // x-axis
-            // }
-           
+        
             yaw = IMU.getGameYaw() * RAD_TO_DEG;
             pitch = IMU.getGamePitch() * RAD_TO_DEG;
             roll = IMU.getRoll() * RAD_TO_DEG;
@@ -199,24 +194,19 @@ int main() {
             gyroX = IMU.getGyroX();
             gyroY = IMU.getGyroY();
             gyroZ = IMU.getGyroZ();
-            
+
+            float timeStamp = IMU.getTimeStamp();
+            printf("timeStamp %f\n", timeStamp);
             }
-            // if (IMU.getSensorEventID() == SENSOR_REPORTID_ACCELEROMETER) {
-            // //if (IMU.getSensorEvent() == true){
-            //     IMU.getAccel(accX, accY, accZ, accAccuracy);
-            //     accX = IMU.getAccelX();
-            // }
+      
             printf("Acc X IMU %f\n", accX);
             printf("Acc Y IMU %f\n", accY);
             printf("Acc z IMU %f\n", accZ);
-            if (IMU.getSensorEventID() == SENSOR_REPORTID_GYROSCOPE_CALIBRATED) {
-                IMU.getGyro(gyroX, gyroY, gyroZ, gyroAccuracy);
-            }
+        
             printf("w X IMU %f\n", gyroX);
             printf("w Y IMU %f\n", gyroY);
             printf("w z IMU %f\n", gyroZ);
-            unsigned long timeStamp = IMU.getTimeStamp();
-            //printf("timeStamp %f\n", timeStamp);
+ 
             // Store sensor data in vector
             vector<float> a_IMU = {accX, accY, accZ}; 
             vector<float> w_IMU = {gyroX, gyroY, gyroZ};   
@@ -229,7 +219,7 @@ int main() {
             vector <float> L_shank_COM = entrywise_mul(L_shank, COM_shank);
             vector <float> L_thigh= calculate_length(angle_thigh, L_thigh_ini);
             vector <float> L_thigh_COM = entrywise_mul(L_thigh, (1-COM_thigh));
-            //printf("L_shank %f\n", L_shank);
+            printf("L_shank %f\n", L_shank);
            
             // Integrate a_IMU to obtain v_IMU
             vector <float> v_IMU= integrate(a_IMU, v_IMU, dt);
