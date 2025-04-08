@@ -101,14 +101,18 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         return {grf_x, grf_y, grf_z};
     }
 
-    // Function to print vectors
-    
-
-// int main() {
-//     i2c_inst_t* i2c_port0=i2c0;
-//     initI2C(i2c_port0, false);
-
-//     BNO08x IMU;
+    // Funtion to filter the IMU output
+    vector<float> low_pass_filter(vector<float> input, vector<float>& prev_output, float alpha) {
+        vector<float> filtered;
+        filtered.push_back(alpha * input[0] + (1 - alpha) * prev_output[0]);
+        filtered.push_back(alpha * input[1] + (1 - alpha) * prev_output[1]);
+        filtered.push_back(alpha * input[2] + (1 - alpha) * prev_output[2]);
+        
+        // Update the previous output
+        prev_output = filtered;
+        return filtered;
+    }
+  
 
 //     while (IMU.begin(CONFIG::BNO08X_ADDR, i2c_port0)==false) {
 //         printf("BNO08x not detected at default I2C address. Check wiring. Freezing\n");
@@ -153,7 +157,7 @@ int main() {
     float angleX = 0.0f, angleY = 0.0f, angleZ = 0.0f; // Angle values
     uint8_t angleAccuracy = 0.0f; // Angle accuracy
 
-    // // Initialize v, dt and w variables
+    // // Initialize velocities
     vector <float> v_IMU= {0,0,0};
     vector <float> v_shank= {0,0,0};
     vector <float> v_thigh= {0,0,0};
@@ -166,6 +170,10 @@ int main() {
     //vector <float> pre_v_IMU2= {0,0,0};
     vector <float> w_thigh= {0,0,0};
     vector <float> w_IMU= {0,0,0};
+
+    //Initialize sensor data
+    vector<float> prev_accel = {0, 0, 0};
+    vector<float> prev_gyro = {0, 0, 0};
 
     // Initialize acceleration variables
     vector <float> a_IMU = {0,0,0};
@@ -180,7 +188,7 @@ int main() {
     // Constants
     const float COM_shank = 0.5726;  // Values taken from paper in Zotero
     const float COM_thigh = 0.4095;
-    const float dt = 0.000004f;  // Time step for 250Hz (4 microseconds between calculations)
+    const float dt = 0.005f;  // Time step for 200Hz (5 miliseconds between calculations)
 
     while (true) 
     {
@@ -212,8 +220,8 @@ int main() {
             float timeStamp = IMU.getTimeStamp();
             printf("timeStamp %f\n", timeStamp);
             }
- 
-            // Store sensor data in vector
+
+           // Store sensor data in vector
             vector<float> a_IMU = {accX, accY, accZ};
             printf("a IMU X %f\n a IMU Y %f\n a IMU Z %f\n", a_IMU[0], a_IMU[1], a_IMU[2]);
             vector<float> w_IMU = {gyroX, gyroY, gyroZ};
@@ -223,6 +231,17 @@ int main() {
             
             vector<float> angle_thigh = estimate_angle_thigh(angle_IMU);
             printf("Angle thigh X %f\n Angle thigh Y %f\n Angle thigh Z %f\n", angle_thigh[0], angle_thigh[1], angle_thigh[2]);
+
+            // Filter IMU output
+            vector<float> filtered_accel = low_pass_filter(a_IMU, prev_accel, 0.1);  // Example alpha = 0.1
+            vector<float> filtered_gyro = low_pass_filter(w_IMU, prev_gyro, 0.1);      // Example alpha = 0.1
+
+            printf("Filtered Accel X %f, Y %f, Z %f\n", filtered_accel[0], filtered_accel[1], filtered_accel[2]);
+            printf("Filtered Gyro X %f, Y %f, Z %f\n", filtered_gyro[0], filtered_gyro[1], filtered_gyro[2]);
+        
+            // Use filtered values in further calculations
+            vector<float> a_IMU = filtered_accel;
+            vector<float> w_IMU = filtered_gyro;
 
             // Calculate Length vectors
             vector <float> L_shank= calculate_length(angle_IMU, L_shank_ini);
