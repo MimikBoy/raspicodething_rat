@@ -93,6 +93,9 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         return {grf_x, grf_y, grf_z};
     }
 
+    // Function to print vectors
+    
+
 // int main() {
 //     i2c_inst_t* i2c_port0=i2c0;
 //     initI2C(i2c_port0, false);
@@ -212,7 +215,7 @@ int main() {
             vector<float> a_IMU = {accX, accY, accZ}; 
             vector<float> w_IMU = {gyroX, gyroY, gyroZ};   
             vector<float> angle_IMU = {roll, pitch, yaw};
-            printf("Angle IMU X %f\n", angle_IMU[0]);
+            printf("Angle IMU %f\n, %f\n, %f\n", angle_IMU[0], angle_IMU[1], angle_IMU[2]);
             
             vector<float> angle_thigh = estimate_angle_thigh(angle_IMU);
             //printf("angle IMU %f\n", angle_IMU);
