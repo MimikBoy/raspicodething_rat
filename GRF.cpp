@@ -226,6 +226,7 @@ int main() {
 
             // Integrate a_IMU to obtain v_IMU
             vector <float> v_IMU= integrate(a_IMU, v_IMU, dt);
+            printf("v IMU X %f\n v IMU Y %f\n v IMU Z %f\n", v_IMU[0], v_IMU[1], v_IMU[2]);
             //vector <float> a_IMU2= differentiate(v_IMU, pre_v_IMU2, a_IMU2, dt);
             //printf("a IMU2 X %f\n a IMU2 Y %f\n a IMU2 Z %f\n", a_IMU2[0], a_IMU2[1], a_IMU2[2]);
             
@@ -257,7 +258,7 @@ int main() {
             vector <float> GRF = calculate_grf(a_IMU, a_thigh, a_hip, m);
             // Return GRF and timestamp here
             //printf("GRF %f\n",GRF);
-        sleep_ms(500);  // Sleep 4 mili sec until next sample to be taken
+        sleep_ms(4);  // Sleep 4 mili sec until next sample to be taken
         } 
 
     return 0;
