@@ -179,6 +179,7 @@ int main() {
     const float dt = 0.005f;  // Time step for 200Hz (5 miliseconds between calculations)
 
     float timeStamp = 0.0f;
+    float startTimeStamp = time_us_64() / 1000.0f;
 
     vector<vector<float>> toExportAngle;
     vector<float> toExportTime;
@@ -209,7 +210,7 @@ int main() {
             gyroZ = IMU.getGyroZ();
             //printf("w X IMU %f\n w Y IMU %f\n w Z IMU %f\n", gyroX, gyroY, gyroZ);
 
-            timeStamp = IMU.getTimeStamp();
+            timeStamp = (time_us_64() / 1000.0f) - startTimeStamp; // Time in seconds
             //printf("timeStamp %f\n", timeStamp);
             }
 
@@ -273,9 +274,17 @@ int main() {
 
             toExportAngle.emplace_back(angle_IMU);
             toExportTime.emplace_back(timeStamp);
-        sleep_ms(5);  // Sleep 5 mili sec until next sample to be taken
-            
 
+            if (toExportTime.size() >= 100) {
+                print_csv(toExportAngle, toExportTime);
+                toExportAngle.clear();
+                toExportTime.clear();
+            }
+
+            if (timeStamp >= 60.0f * 1000.0f) { // Stop after 10 seconds
+                break;
+            }
+        sleep_ms(5);  // Sleep 5 mili sec until next sample to be taken
         } 
 
     return 0;
