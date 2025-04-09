@@ -183,6 +183,7 @@ int main() {
     vector<float> a_thigh = {0,0,0};
     vector<float> a_hip = {0,0,0};
     //vector<float> a_IMU2={0,0,0};
+    vector<float> pre_a_IMU = {0,0,0};
 
     //Initialize angles
     vector <float> pre_angle_thigh = {0,0,0};
@@ -250,7 +251,7 @@ int main() {
             vector <float> L_thigh_COM = entrywise_mul(L_thigh, (1-COM_thigh));
 
             // Integrate a_IMU to obtain v_IMU
-            vector <float> v_IMU= integrate(a_IMU, v_IMU, dt);
+            vector <float> v_IMU= integrate(a_IMU, pre_a_IMU, v_IMU, dt);
             printf("v IMU X %f\n v IMU Y %f\n v IMU Z %f\n", v_IMU[0], v_IMU[1], v_IMU[2]);
             //vector <float> a_IMU2= differentiate(v_IMU, pre_v_IMU2, a_IMU2, dt);
             //printf("a IMU2 X %f\n a IMU2 Y %f\n a IMU2 Z %f\n", a_IMU2[0], a_IMU2[1], a_IMU2[2]);
@@ -277,6 +278,7 @@ int main() {
             vector <float> pre_v_thigh={v_thigh};
             vector <float> pre_v_hip={v_hip};
             vector <float> pre_v_shank={v_shank};
+            vector <float> pre_a_IMU={a_IMU};
            //vector <float> pre_v_IMU2= {v_IMU};
             // Calculate GRF
             vector <float> GRF = calculate_grf(a_IMU, a_thigh, a_hip, m);
