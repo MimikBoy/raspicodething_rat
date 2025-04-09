@@ -70,7 +70,7 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
          float bx = b[0] + (a[0] * dt);
          float by = b[1] + (a[1] * dt);
          float bz = b[2] + (a[2] * dt);
-     return {bx, by, bz};
+        return {bx, by, bz};
      }
 
     // // Function to integrate 
@@ -125,7 +125,7 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
 //     IMU.enableGyro(2500);
 int main() {
     stdio_init_all();
-
+    
     i2c_inst_t* i2c_port0 = i2c0;
     initI2C(i2c_port0, false);
 
@@ -167,6 +167,7 @@ int main() {
     vector <float> pre_v_thigh= {0,0,0};
     vector <float> pre_v_knee= {0,0,0};
     vector <float> pre_v_hip= {0,0,0};
+    vector <float> pre_v_IMU= {0,0,0};
     //vector <float> pre_v_IMU2= {0,0,0};
     vector <float> w_thigh= {0,0,0};
     vector <float> w_IMU= {0,0,0};
@@ -187,11 +188,22 @@ int main() {
 
     //Initialize angles
     vector <float> pre_angle_thigh = {0,0,0};
+    vector<float> angle_IMU;
+
+    //Initialize length vectors
+    vector <float> L_shank;
+    vector <float> L_shank_COM;
+    vector <float> L_thigh;
+    vector <float> L_thigh_COM;
+
+    // Initialize GRF
+    vector<float> GRF;
 
     // Constants
     const float COM_shank = 0.5726;  // Values taken from paper in Zotero
     const float COM_thigh = 0.4095;
     const float dt = 0.005f;  // Time step for 200Hz (5 miliseconds between calculations)
+
 
     while (true) 
     {
@@ -225,68 +237,57 @@ int main() {
             }
 
            // Store sensor data in vector
-            // vector<float> raw_a_IMU = {accX, accY, accZ};
-            vector<float> a_IMU = {accX, accY, accZ};
-            //printf("a IMU X %f\n a IMU Y %f\n a IMU Z %f\n", a_IMU[0], a_IMU[1], a_IMU[2]);
-            //printf("raw a IMU X %f\n raw a IMU Y %f\n raw a IMU Z %f\n", raw_a_IMU[0], raw_a_IMU[1], raw_a_IMU[2]);
-            vector<float> w_IMU = {gyroX, gyroY, gyroZ};
-            printf("w IMU X %f\n w IMU Y %f\n w IMU Z %f\n", w_IMU[0], w_IMU[1], w_IMU[2]);
-            // vector<float> raw_w_IMU = {gyroX, gyroY, gyroZ};
-            // printf("raw w IMU X %f\n raw w IMU Y %f\n raw w IMU Z %f\n", raw_w_IMU[0], raw_w_IMU[1], raw_w_IMU[2]);  
-            vector<float> angle_IMU = {roll, pitch, yaw};
+            a_IMU = {accX, accY, accZ};
+            printf("a IMU X %f\n a IMU Y %f\n a IMU Z %f\n", a_IMU[0], a_IMU[1], a_IMU[2]);
+            w_IMU = {gyroX, gyroY, gyroZ};
+            //printf("w IMU X %f\n w IMU Y %f\n w IMU Z %f\n", w_IMU[0], w_IMU[1], w_IMU[2]);
+            angle_IMU = {roll, pitch, yaw};
             //printf("Angle IMU X %f\n Angle IMU Y %f\n Angle IMU Z %f\n", angle_IMU[0], angle_IMU[1], angle_IMU[2]);
             
             vector<float> angle_thigh = estimate_angle_thigh(angle_IMU);
             //printf("Angle thigh X %f\n Angle thigh Y %f\n Angle thigh Z %f\n", angle_thigh[0], angle_thigh[1], angle_thigh[2]);
 
-            // Filter IMU output
-            // vector<float> a_IMU = low_pass_filter(raw_a_IMU, prev_accel, 0.2);  // Example alpha = 0.1
-            // vector<float> w_IMU = low_pass_filter(raw_w_IMU, prev_gyro, 0.2);      // Example alpha = 0.1
-
-            // printf("Filtered Accel X %f, Y %f, Z %f\n", a_IMU[0], a_IMU[1], a_IMU[2]);
-            // printf("Filtered Gyro X %f, Y %f, Z %f\n", w_IMU[0], w_IMU[1], w_IMU[2]);
-
             // Calculate Length vectors
-            vector <float> L_shank= calculate_length(angle_IMU, L_shank_ini);
+            L_shank= calculate_length(angle_IMU, L_shank_ini);
             //printf("L shank X %f\n L shank Y %f\n L shank Z %f\n", L_shank[0], L_shank[1], L_shank[2]);
-            vector <float> L_shank_COM = entrywise_mul(L_shank, COM_shank);
+            L_shank_COM = entrywise_mul(L_shank, COM_shank);
             //printf("L shank X COM %f\n L shank Y COM %f\n L shank Z COM %f\n", L_shank_COM[0], L_shank_COM[1], L_shank_COM[2]);
-            vector <float> L_thigh= calculate_length(angle_thigh, L_thigh_ini);
-            vector <float> L_thigh_COM = entrywise_mul(L_thigh, (1-COM_thigh));
+            L_thigh= calculate_length(angle_thigh, L_thigh_ini);
+            L_thigh_COM = entrywise_mul(L_thigh, (1-COM_thigh));
 
             // Integrate a_IMU to obtain v_IMU
-            vector <float> v_IMU= integrate(a_IMU, pre_a_IMU, v_IMU, dt);
-            //printf("v IMU X %f\n v IMU Y %f\n v IMU Z %f\n", v_IMU[0], v_IMU[1], v_IMU[2]);
-            //vector <float> a_IMU2= differentiate(v_IMU, pre_v_IMU2, a_IMU2, dt);
-            //printf("a IMU2 X %f\n a IMU2 Y %f\n a IMU2 Z %f\n", a_IMU2[0], a_IMU2[1], a_IMU2[2]);
+            //vector <float> v_IMU= integrate(a_IMU, pre_a_IMU, v_IMU, dt);
+            v_IMU = integrate(a_IMU,v_IMU,dt);
+            printf("v IMU X %f\n v IMU Y %f\n v IMU Z %f\n", v_IMU[0], v_IMU[1], v_IMU[2]);
             
             // Calculate velocity and acceleration shank
-            vector <float> v_shank = entrywise_add(v_IMU, crossProduct(w_IMU,L_shank_COM));
-            printf("v shank X %f\n v shank Y %f\n v shank Z %f\n", v_shank[0], v_shank[1], v_shank[2]);
-            vector <float> a_shank = differentiate(v_shank, pre_v_shank, dt);
+            v_shank = entrywise_add(v_IMU, crossProduct(w_IMU,L_shank_COM));
+            //printf("v shank X %f\n v shank Y %f\n v shank Z %f\n", v_shank[0], v_shank[1], v_shank[2]);
+            a_shank = differentiate(v_shank, pre_v_shank, dt);
 
             // Calculate velocity knee
-            vector <float> v_knee= entrywise_add(v_IMU, crossProduct(w_IMU,L_shank));
+            v_knee= entrywise_add(v_IMU, crossProduct(w_IMU,L_shank));
 
             // Calculate velocity and acceleration thigh
-            vector <float> w_thigh = differentiate(angle_thigh, pre_angle_thigh, dt);
-            vector <float> v_thigh= entrywise_add(v_knee, crossProduct(w_thigh,L_thigh_COM));
-            vector <float> a_thigh = differentiate(v_thigh, pre_v_thigh, dt);
+            w_thigh = differentiate(angle_thigh, pre_angle_thigh, dt);
+            v_thigh= entrywise_add(v_knee, crossProduct(w_thigh,L_thigh_COM));
+            a_thigh = differentiate(v_thigh, pre_v_thigh, dt);
             
             // Calculate velocity and acceleration hip
-            vector <float> v_hip= entrywise_add(v_knee, crossProduct(w_thigh,L_thigh));
-            vector <float> a_hip = differentiate(v_hip, pre_v_hip, dt);
+            v_hip= entrywise_add(v_knee, crossProduct(w_thigh,L_thigh));
+            a_hip = differentiate(v_hip, pre_v_hip, dt);
             //printf("Acceleration hip %f\n",a_hip);
             //printf("Velocity hip %f\n",v_hip);
             // Assign current value to previous value
-            vector <float> pre_angle_thigh={angle_thigh};
-            vector <float> pre_v_thigh={v_thigh};
-            vector <float> pre_v_hip={v_hip};
-            vector <float> pre_v_shank={v_shank};
-            vector <float> pre_a_IMU={a_IMU};
+            pre_angle_thigh = angle_thigh;
+            pre_v_thigh = v_thigh;
+            pre_v_hip = v_hip;
+            pre_v_IMU = v_IMU;
+            pre_v_shank = v_shank;
+            pre_a_IMU = a_IMU;
            //vector <float> pre_v_IMU2= {v_IMU};
             // Calculate GRF
-            vector <float> GRF = calculate_grf(a_IMU, a_thigh, a_hip, m);
+            GRF = calculate_grf(a_IMU, a_thigh, a_hip, m);
             // Return GRF and timestamp here
             //printf("GRF %f\n",GRF);
         sleep_ms(5);  // Sleep 5 mili sec until next sample to be taken
