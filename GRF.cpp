@@ -101,28 +101,6 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         return {grf_x, grf_y, grf_z};
     }
 
-    // Funtion to filter the IMU output
-    vector<float> low_pass_filter(vector<float> input, vector<float>& prev_output, float alpha) {
-        vector<float> filtered;
-        filtered.push_back(alpha * input[0] + (1 - alpha) * prev_output[0]);
-        filtered.push_back(alpha * input[1] + (1 - alpha) * prev_output[1]);
-        filtered.push_back(alpha * input[2] + (1 - alpha) * prev_output[2]);
-        
-        // Update the previous output
-        prev_output = filtered;
-        return filtered;
-    }
-  
-
-//     while (IMU.begin(CONFIG::BNO08X_ADDR, i2c_port0)==false) {
-//         printf("BNO08x not detected at default I2C address. Check wiring. Freezing\n");
-//         scan_i2c_bus();
-//         sleep_ms(1000);
-//     }
-
-//     IMU.enableAccelerometer(2500);
-//     IMU.enableGameRotationVector(2500);
-//     IMU.enableGyro(2500);
 int main() {
     stdio_init_all();
     
