@@ -95,8 +95,8 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         float m_thigh = 0.1416*m;
         float m_hip = 0.5*0.6028*m;
         float g = 9.81;
-        float grf_x = m_shank*(a_shank[0]-g) + m_thigh*(a_thigh[0]-g) + m_hip*(a_hip[0]-g);
-        float grf_y = m_shank*(a_shank[1]-g) + m_thigh*(a_thigh[1]-g) + m_hip*(a_hip[1]-g);
+        float grf_x = m_shank*(a_shank[0]) + m_thigh*(a_thigh[0]) + m_hip*(a_hip[0]);
+        float grf_y = m_shank*(a_shank[1]) + m_thigh*(a_thigh[1]) + m_hip*(a_hip[1]);
         float grf_z = m_shank*(a_shank[2]-g) + m_thigh*(a_thigh[2]-g) + m_hip*(a_hip[2]-g);
         return {grf_x, grf_y, grf_z};
     }
