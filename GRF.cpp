@@ -178,7 +178,10 @@ int main() {
     const float COM_thigh = 0.4095;
     const float dt = 0.005f;  // Time step for 200Hz (5 miliseconds between calculations)
 
+    float timeStamp = 0.0f;
 
+    vector<vector<float>> toExportAngle;
+    vector<float> toExportTime;
     while (true) 
     {
         // Read sensor data
@@ -206,7 +209,7 @@ int main() {
             gyroZ = IMU.getGyroZ();
             //printf("w X IMU %f\n w Y IMU %f\n w Z IMU %f\n", gyroX, gyroY, gyroZ);
 
-            float timeStamp = IMU.getTimeStamp();
+            timeStamp = IMU.getTimeStamp();
             //printf("timeStamp %f\n", timeStamp);
             }
 
@@ -267,8 +270,27 @@ int main() {
             GRF = calculate_grf(a_shank, a_thigh, a_hip, m);
             // Return GRF and timestamp here
             printf("GRF X %f\n GRF Y %f\n GRF Z %f\n", GRF[0], GRF[1], GRF[2]);
+
+            toExportAngle.emplace_back(angle_IMU);
+            toExportTime.emplace_back(timeStamp);
         sleep_ms(5);  // Sleep 5 mili sec until next sample to be taken
+            
+
         } 
 
     return 0;
+}
+
+void print_csv(const vector<vector<float>>& angles, const vector<float>& times) {
+    // Print CSV header
+    printf("Time,Angle_X,Angle_Y,Angle_Z\n");
+
+    // Iterate through the data and print each row
+    for (size_t i = 0; i < times.size(); ++i) {
+        printf("%.3f,%.3f,%.3f,%.3f\n", 
+               times[i], 
+               angles[i][0], 
+               angles[i][1], 
+               angles[i][2]);
+    }
 }
