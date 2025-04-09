@@ -48,6 +48,7 @@ vector<float> entrywise_add(vector<float> vect_A, vector<float> vect_B){
     return{vect_Cx, vect_Cy, vect_Cz};
 }
 
+
 // NOTE THIS IS A PLACEHOLDER:
 // Function to estimate the thigh angle
 vector<float> estimate_angle_thigh(vector<float> angle){   
@@ -100,6 +101,21 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         float grf_z = m_shank*(a_shank[2]-g) + m_thigh*(a_thigh[2]-g) + m_hip*(a_hip[2]-g);
         return {grf_x, grf_y, grf_z};
     }
+
+    void print_csv(const vector<vector<float>>& angles, const vector<float>& times) {
+        // Print CSV header
+        //printf("Time,Angle_X,Angle_Y,Angle_Z\n");
+    
+        // Iterate through the data and print each row
+        for (size_t i = 0; i < times.size(); ++i) {
+            printf("%.3f,%.3f,%.3f,%.3f\n", 
+                   times[i], 
+                   angles[i][0], 
+                   angles[i][1], 
+                   angles[i][2]);
+        }
+    }
+    
 
 int main() {
     stdio_init_all();
@@ -236,29 +252,29 @@ int main() {
             // Integrate a_IMU to obtain v_IMU
             v_IMU= integrate(a_IMU, pre_a_IMU, v_IMU, dt);
             //v_IMU = integrate(a_IMU,v_IMU,dt);
-            printf("v IMU X %f\n v IMU Y %f\n v IMU Z %f\n", v_IMU[0], v_IMU[1], v_IMU[2]);
+            //printf("v IMU X %f\n v IMU Y %f\n v IMU Z %f\n", v_IMU[0], v_IMU[1], v_IMU[2]);
             
             // Calculate velocity and acceleration shank
             v_shank = entrywise_add(v_IMU, crossProduct(w_IMU,L_shank_COM));
             //printf("v shank X %f\n v shank Y %f\n v shank Z %f\n", v_shank[0], v_shank[1], v_shank[2]);
             a_shank = differentiate(v_shank, pre_v_shank, dt);
-            printf("a shank X %f\n a shank Y %f\n a shank Z %f\n", a_shank[0], a_shank[1], a_shank[2]);
+            //printf("a shank X %f\n a shank Y %f\n a shank Z %f\n", a_shank[0], a_shank[1], a_shank[2]);
 
             // Calculate velocity knee
             v_knee= entrywise_add(v_IMU, crossProduct(w_IMU,L_shank));
-            printf("v knee X %f\n v knee Y %f\n v knee Z %f\n", v_knee[0], v_knee[1], v_knee[2]);
+            //printf("v knee X %f\n v knee Y %f\n v knee Z %f\n", v_knee[0], v_knee[1], v_knee[2]);
             // Calculate velocity and acceleration thigh
             w_thigh = differentiate(angle_thigh, pre_angle_thigh, dt);
-            printf("w thigh X %f\n w thigh Y %f\n w thigh Z %f\n", w_thigh[0], w_thigh[1], w_thigh[2]);
+            //printf("w thigh X %f\n w thigh Y %f\n w thigh Z %f\n", w_thigh[0], w_thigh[1], w_thigh[2]);
             v_thigh= entrywise_add(v_knee, crossProduct(w_thigh,L_thigh_COM));
-            printf("v thigh X %f\n v thigh Y %f\n v thigh Z %f\n", v_thigh[0], v_thigh[1], v_thigh[2]);
+            //printf("v thigh X %f\n v thigh Y %f\n v thigh Z %f\n", v_thigh[0], v_thigh[1], v_thigh[2]);
             a_thigh = differentiate(v_thigh, pre_v_thigh, dt);
-            printf("a thigh X %f\n a thigh Y %f\n a thigh Z %f\n", a_thigh[0], a_thigh[1], a_thigh[2]);
+            //printf("a thigh X %f\n a thigh Y %f\n a thigh Z %f\n", a_thigh[0], a_thigh[1], a_thigh[2]);
             // Calculate velocity and acceleration hip
             v_hip= entrywise_add(v_knee, crossProduct(w_thigh,L_thigh));
             a_hip = differentiate(v_hip, pre_v_hip, dt);
-            printf("a hip X %f\n a hip Y %f\n a hip Z %f\n", a_hip[0], a_hip[1], a_hip[2]);
-            printf("v hip X %f\n v hip Y %f\n v hip Z %f\n", v_hip[0], v_hip[1], v_hip[2]);
+            //printf("a hip X %f\n a hip Y %f\n a hip Z %f\n", a_hip[0], a_hip[1], a_hip[2]);
+            //printf("v hip X %f\n v hip Y %f\n v hip Z %f\n", v_hip[0], v_hip[1], v_hip[2]);
             // Assign current value to previous value
             pre_angle_thigh = angle_thigh;
             pre_v_thigh = v_thigh;
@@ -270,7 +286,7 @@ int main() {
             // Calculate GRF
             GRF = calculate_grf(a_shank, a_thigh, a_hip, m);
             // Return GRF and timestamp here
-            printf("GRF X %f\n GRF Y %f\n GRF Z %f\n", GRF[0], GRF[1], GRF[2]);
+            //printf("GRF X %f\n GRF Y %f\n GRF Z %f\n", GRF[0], GRF[1], GRF[2]);
 
             toExportAngle.emplace_back(angle_IMU);
             toExportTime.emplace_back(timeStamp);
@@ -290,16 +306,3 @@ int main() {
     return 0;
 }
 
-void print_csv(const vector<vector<float>>& angles, const vector<float>& times) {
-    // Print CSV header
-    printf("Time,Angle_X,Angle_Y,Angle_Z\n");
-
-    // Iterate through the data and print each row
-    for (size_t i = 0; i < times.size(); ++i) {
-        printf("%.3f,%.3f,%.3f,%.3f\n", 
-               times[i], 
-               angles[i][0], 
-               angles[i][1], 
-               angles[i][2]);
-    }
-}
