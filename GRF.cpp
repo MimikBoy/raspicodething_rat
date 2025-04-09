@@ -291,7 +291,7 @@ int main() {
             // Calculate GRF
             GRF = calculate_grf(a_IMU, a_thigh, a_hip, m);
             // Return GRF and timestamp here
-            printf("GRF %f\n",GRF);
+            printf("GRF X %f\n GRF Y %f\n GRF Z %f\n", GRF[0], GRF[1], GRF[2]);
         sleep_ms(5);  // Sleep 5 mili sec until next sample to be taken
         } 
 
