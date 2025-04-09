@@ -168,13 +168,10 @@ int main() {
     vector <float> pre_v_knee= {0,0,0};
     vector <float> pre_v_hip= {0,0,0};
     vector <float> pre_v_IMU= {0,0,0};
-    //vector <float> pre_v_IMU2= {0,0,0};
     vector <float> w_thigh= {0,0,0};
     vector <float> w_IMU= {0,0,0};
 
     //Initialize sensor data
-    vector<float> raw_a_IMU = {0, 0, 0};
-    vector<float> raw_w_IMU = {0, 0, 0};
     vector<float> prev_accel = {0, 0, 0};
     vector<float> prev_gyro = {0, 0, 0};
 
@@ -183,7 +180,6 @@ int main() {
     vector<float> a_shank = {0,0,0};
     vector<float> a_thigh = {0,0,0};
     vector<float> a_hip = {0,0,0};
-    //vector<float> a_IMU2={0,0,0};
     vector<float> pre_a_IMU = {0,0,0};
 
     //Initialize angles
@@ -238,9 +234,9 @@ int main() {
 
            // Store sensor data in vector
             a_IMU = {accX, accY, accZ};
-            printf("a IMU X %f\n a IMU Y %f\n a IMU Z %f\n", a_IMU[0], a_IMU[1], a_IMU[2]);
+            //printf("a IMU X %f\n a IMU Y %f\n a IMU Z %f\n", a_IMU[0], a_IMU[1], a_IMU[2]);
             w_IMU = {gyroX, gyroY, gyroZ};
-            //printf("w IMU X %f\n w IMU Y %f\n w IMU Z %f\n", w_IMU[0], w_IMU[1], w_IMU[2]);
+            printf("w IMU X %f\n w IMU Y %f\n w IMU Z %f\n", w_IMU[0], w_IMU[1], w_IMU[2]);
             angle_IMU = {roll, pitch, yaw};
             //printf("Angle IMU X %f\n Angle IMU Y %f\n Angle IMU Z %f\n", angle_IMU[0], angle_IMU[1], angle_IMU[2]);
             
@@ -249,7 +245,7 @@ int main() {
 
             // Calculate Length vectors
             L_shank= calculate_length(angle_IMU, L_shank_ini);
-            //printf("L shank X %f\n L shank Y %f\n L shank Z %f\n", L_shank[0], L_shank[1], L_shank[2]);
+            printf("L shank X %f\n L shank Y %f\n L shank Z %f\n", L_shank[0], L_shank[1], L_shank[2]);
             L_shank_COM = entrywise_mul(L_shank, COM_shank);
             //printf("L shank X COM %f\n L shank Y COM %f\n L shank Z COM %f\n", L_shank_COM[0], L_shank_COM[1], L_shank_COM[2]);
             L_thigh= calculate_length(angle_thigh, L_thigh_ini);
@@ -258,27 +254,27 @@ int main() {
             // Integrate a_IMU to obtain v_IMU
             //vector <float> v_IMU= integrate(a_IMU, pre_a_IMU, v_IMU, dt);
             v_IMU = integrate(a_IMU,v_IMU,dt);
-            //printf("v IMU X %f\n v IMU Y %f\n v IMU Z %f\n", v_IMU[0], v_IMU[1], v_IMU[2]);
+            printf("v IMU X %f\n v IMU Y %f\n v IMU Z %f\n", v_IMU[0], v_IMU[1], v_IMU[2]);
             
             // Calculate velocity and acceleration shank
             v_shank = entrywise_add(v_IMU, crossProduct(w_IMU,L_shank_COM));
             //printf("v shank X %f\n v shank Y %f\n v shank Z %f\n", v_shank[0], v_shank[1], v_shank[2]);
             a_shank = differentiate(v_shank, pre_v_shank, dt);
-            printf("a shank X %f\n a shank Y %f\n a shank Z %f\n", a_shank[0], a_shank[1], a_shank[2]);
+            //printf("a shank X %f\n a shank Y %f\n a shank Z %f\n", a_shank[0], a_shank[1], a_shank[2]);
 
             // Calculate velocity knee
             v_knee= entrywise_add(v_IMU, crossProduct(w_IMU,L_shank));
-            //printf("v knee X %f\n v knee Y %f\n v knee Z %f\n", v_knee[0], v_knee[1], v_knee[2]);
+            printf("v knee X %f\n v knee Y %f\n v knee Z %f\n", v_knee[0], v_knee[1], v_knee[2]);
             // Calculate velocity and acceleration thigh
             w_thigh = differentiate(angle_thigh, pre_angle_thigh, dt);
             v_thigh= entrywise_add(v_knee, crossProduct(w_thigh,L_thigh_COM));
             //printf("v thigh X %f\n v thigh Y %f\n v thigh Z %f\n", v_thigh[0], v_thigh[1], v_thigh[2]);
             a_thigh = differentiate(v_thigh, pre_v_thigh, dt);
-            printf("a thigh X %f\n a thigh Y %f\n a thigh Z %f\n", a_thigh[0], a_thigh[1], a_thigh[2]);
+            //printf("a thigh X %f\n a thigh Y %f\n a thigh Z %f\n", a_thigh[0], a_thigh[1], a_thigh[2]);
             // Calculate velocity and acceleration hip
             v_hip= entrywise_add(v_knee, crossProduct(w_thigh,L_thigh));
             a_hip = differentiate(v_hip, pre_v_hip, dt);
-            printf("a hip X %f\n a hip Y %f\n a hip Z %f\n", a_hip[0], a_hip[1], a_hip[2]);
+            //printf("a hip X %f\n a hip Y %f\n a hip Z %f\n", a_hip[0], a_hip[1], a_hip[2]);
             //printf("v hip X %f\n v hip Y %f\n v hip Z %f\n", v_hip[0], v_hip[1], v_hip[2]);
             // Assign current value to previous value
             pre_angle_thigh = angle_thigh;
