@@ -104,6 +104,16 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         return {grf_x, grf_y, grf_z};
     }
 
+    // Function to detect steps based on vertical acceleration
+    int detect_step(float currentAcc, float threshold){
+
+        if(currentAcc < threshold){
+            return 1; // Step detected
+        } else {
+            return 0; // No step detected
+        }
+    }
+
     void print_csv(const vector<vector<float>>& angles, const vector<vector<float>>& accels, const vector<float>& times, const vector<float>& steps) {
         // Print CSV header
         //printf("Time,Angle_X,Angle_Y,Angle_Z,Accel_X,Accel_Y,Accel_Z\n");
@@ -116,7 +126,7 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
                     angles[i][0], angles[i][1], angles[i][2], 
                     accels[i][0], accels[i][1], accels[i][2]);
         }
-    }
+    } 
     
 
 int main() {
@@ -166,6 +176,7 @@ int main() {
     uint8_t angleAccuracy = 0.0f; // Angle accuracy
     uint16_t adcresult; //starting ADC
     bool adcbool = false; //ADC boolean
+    float threshold = -0.064f;
 
     // // Initialize velocities
     vector <float> v_IMU= {0,0,0};
@@ -218,7 +229,8 @@ int main() {
     uint8_t tapDetector = 0;
     int stepCounterInterval = 32 / 5;
     int loopCounter = 0;
-    bool step = 0;
+    int step = 0;
+    int stepDetectorTest = 0;
 
     vector<vector<float>> toExportAngle;
     vector<vector<float>> toExportAccel;
@@ -260,7 +272,7 @@ int main() {
 
             if (loopCounter >= stepCounterInterval) {
                 stepDetector = IMU.getStepCount();
-                printf("Step Count: %d\n", stepDetector);
+                printf("Step Count: %u\n", stepDetector);
                 loopCounter = 0; // Reset the counter
 
                 if (stepDetector == prev_stepDetector) {
@@ -269,16 +281,10 @@ int main() {
                 else {
                     step = 1;
                 }
-                printf("Step: %d\n", step);
+                // printf("Step: %d\n", step);
     
                 prev_stepDetector = stepDetector;
             }
-
-            // stepDetector = IMU.getStepCount();
-            // printf("Step Count: %d\n", stepDetector);
-
-            // tapDetector = IMU.getTapDetector();
-            // printf("Tap: %d\n", tapDetector);
             }
 
            // Store sensor data in vector
@@ -336,6 +342,10 @@ int main() {
            //vector <float> pre_v_IMU2= {v_IMU};
             // Calculate GRF
             GRF = calculate_grf(a_shank, a_thigh, a_hip, m);
+
+            // Stepdetector
+            // stepDetectorTest = detect_step(a_IMU[0], threshold);
+            // printf("Step: %d\n", step);
 
             // Return GRF, timestamp and step
             //printf("GRF X %f\n GRF Y %f\n GRF Z %f\n", GRF[0], GRF[1], GRF[2]);
