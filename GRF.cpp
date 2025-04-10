@@ -213,7 +213,10 @@ int main() {
 
     float timeStamp = 0.0f;
     float startTimeStamp = time_us_64() / 1000.0f;
-    float stepDetector = 0.0f;
+    uint16_t stepDetector = 0;
+    uint8_t tapDetector = 0;
+    int stepCounterInterval = 32 / 5;
+    int loopCounter = 0;
 
     vector<vector<float>> toExportAngle;
     vector<vector<float>> toExportAccel;
@@ -251,7 +254,19 @@ int main() {
             //printf("timeStamp %f\n", timeStamp);
 
             //step detector
-            stepDetector = IMU.getStepCount();
+            loopCounter++;
+
+            if (loopCounter >= stepCounterInterval) {
+                stepDetector = IMU.getStepCount();
+                printf("Step Count: %d\n", stepDetector);
+                loopCounter = 0; // Reset the counter
+            }
+
+            // stepDetector = IMU.getStepCount();
+            // printf("Step Count: %d\n", stepDetector);
+
+            // tapDetector = IMU.getTapDetector();
+            // printf("Tap: %d\n", tapDetector);
             }
 
            // Store sensor data in vector
@@ -326,11 +341,11 @@ int main() {
             toExportAngle.emplace_back(angle_IMU);
             toExportTime.emplace_back(timeStamp);
             toExportAccel.emplace_back(a_IMU);
-            toExportStep.emplace_back(stepDetector);
+            toExportStep.emplace_back((float)stepDetector);
 
 
             if (toExportTime.size() >= 100) {
-                print_csv(toExportAngle, toExportAccel, toExportTime, toExportStep);
+                //print_csv(toExportAngle, toExportAccel, toExportTime, toExportStep);
                 toExportAngle.clear();
                 toExportAccel.clear();
                 toExportTime.clear();
