@@ -293,13 +293,13 @@ int main() {
             toExportAccel.emplace_back(a_IMU);
 
             if (toExportTime.size() >= 100) {
-                print_csv(toExportAngle, toExportAccel, toExportTime);
+                //print_csv(toExportAngle, toExportAccel, toExportTime);
                 toExportAngle.clear();
                 toExportAccel.clear();
                 toExportTime.clear();
             }
 
-            if (timeStamp >= 240.0f * 1000.0f) { // Stop after 10 seconds
+            if (timeStamp >= 500.0f * 1000.0f) { // Stop after 10 seconds
                 break; // When testing it did not restart
             }
         sleep_ms(5);  // Sleep 5 mili sec until next sample to be taken
