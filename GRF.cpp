@@ -214,9 +214,11 @@ int main() {
     float timeStamp = 0.0f;
     float startTimeStamp = time_us_64() / 1000.0f;
     uint16_t stepDetector = 0;
+    uint16_t prev_stepDetector = 0;
     uint8_t tapDetector = 0;
     int stepCounterInterval = 32 / 5;
     int loopCounter = 0;
+    bool step = 0;
 
     vector<vector<float>> toExportAngle;
     vector<vector<float>> toExportAccel;
@@ -268,6 +270,16 @@ int main() {
             // tapDetector = IMU.getTapDetector();
             // printf("Tap: %d\n", tapDetector);
             }
+
+            if (stepDetector == prev_stepDetector) {
+                step = 0;
+            }
+            else {
+                step = 1;
+            }
+            printf("Step: %d\n", step);
+
+            prev_stepDetector = stepDetector;
 
            // Store sensor data in vector
             a_IMU = {accX, accY, accZ};
@@ -325,7 +337,7 @@ int main() {
             // Calculate GRF
             GRF = calculate_grf(a_shank, a_thigh, a_hip, m);
 
-            // Return GRF, timestamp and stepdetector
+            // Return GRF, timestamp and step
             //printf("GRF X %f\n GRF Y %f\n GRF Z %f\n", GRF[0], GRF[1], GRF[2]);
 
             adcresult = adc_read();
