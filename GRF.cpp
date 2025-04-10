@@ -298,7 +298,7 @@ int main() {
             }
 
             if (timeStamp >= 120.0f * 1000.0f) { // Stop after 10 seconds
-                break;
+                break; // When testing it did not restart
             }
         sleep_ms(5);  // Sleep 5 mili sec until next sample to be taken
         } 
