@@ -198,6 +198,7 @@ int main() {
     float startTimeStamp = time_us_64() / 1000.0f;
 
     vector<vector<float>> toExportAngle;
+    vector<vector<float>> toExportAccel;
     vector<float> toExportTime;
     while (true) 
     {
@@ -290,10 +291,13 @@ int main() {
 
             toExportAngle.emplace_back(angle_IMU);
             toExportTime.emplace_back(timeStamp);
+            toExportAccel.emplace_back(a_IMU);
 
             if (toExportTime.size() >= 100) {
                 print_csv(toExportAngle, toExportTime);
+                print_csv(toExportAccel,toExportTime);
                 toExportAngle.clear();
+                toExportAccel.clear();
                 toExportTime.clear();
             }
 
