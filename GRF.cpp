@@ -14,6 +14,8 @@ using namespace std;
 #include "utils.h"
 // Test 
 #include "GRF.h"
+#include "hardware/gpio.h"
+#include "hardware/adc.h"
 
 // I2C Settings
 #define I2C_PORT i2c0
@@ -123,6 +125,12 @@ int main() {
     i2c_inst_t* i2c_port0 = i2c0;
     initI2C(i2c_port0, false);
 
+    adc_init();
+    // Make sure GPIO is high-impedance, no pullups etc
+    adc_gpio_init(26);
+    // Select ADC input 0 (GPIO26)
+    adc_select_input(0);
+
     BNO08x IMU;
 
     while (!IMU.begin(0x4A, i2c_port0)) {
@@ -150,6 +158,8 @@ int main() {
     uint8_t gyroAccuracy = 0.0f; // Gyroscope accuracy
     float angleX = 0.0f, angleY = 0.0f, angleZ = 0.0f; // Angle values
     uint8_t angleAccuracy = 0.0f; // Angle accuracy
+    uint16_t adcresult; //starting ADC
+    bool adcbool = false; //ADC boolean
 
     // // Initialize velocities
     vector <float> v_IMU= {0,0,0};
@@ -193,6 +203,7 @@ int main() {
     const float COM_shank = 0.5726;  // Values taken from paper in Zotero
     const float COM_thigh = 0.4095;
     const float dt = 0.005f;  // Time step for 200Hz (5 miliseconds between calculations)
+    const float conversion_factor = 3.3f / (1 << 12); //for ADC
 
     float timeStamp = 0.0f;
     float startTimeStamp = time_us_64() / 1000.0f;
@@ -290,6 +301,16 @@ int main() {
 
             toExportAngle.emplace_back(angle_IMU);
             toExportTime.emplace_back(timeStamp);
+            
+            adcresult = adc_read();
+
+            if (adcresult * conversion_factor >= 0.03) {
+                adcbool = true;
+            }
+            else {
+                adcbool = false;
+            }
+            printf("Raw value: 0x%03x, voltage: %f V\n", adcresult, adcresult * conversion_factor, adcbool);
 
             if (toExportTime.size() >= 100) {
                 print_csv(toExportAngle, toExportTime);
