@@ -50,8 +50,7 @@ vector<float> entrywise_add(vector<float> vect_A, vector<float> vect_B){
     return{vect_Cx, vect_Cy, vect_Cz};
 }
 
-
-// NOTE THIS IS A PLACEHOLDER:
+// NOTE THIS IS A PLACEHOLDER (should still be improved by using the estimated thigh relation):
 // Function to estimate the thigh angle
 vector<float> estimate_angle_thigh(vector<float> angle){   
     float theta_thigh_x = angle[0];
@@ -67,14 +66,6 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
     float cross_Pz = vect_A[0] * vect_B[1] - vect_A[1] * vect_B[0];
     return {cross_Px, cross_Py, cross_Pz};
 }
-
-    //  // Function to integrate
-    //  vector <float> integrate(vector <float> a, vector <float> b, float dt){
-    //      float bx = b[0] + (a[0] * dt);
-    //      float by = b[1] + (a[1] * dt);
-    //      float bz = b[2] + (a[2] * dt);
-    //     return {bx, by, bz};
-    //  }
 
     // Function to integrate 
     vector<float> integrate(vector<float> a, vector<float> pre_a, vector<float> v, float dt) {
@@ -104,16 +95,20 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         return {grf_x, grf_y, grf_z};
     }
 
-    // Function to detect steps based on vertical acceleration
-    int detect_step(float currentAcc, float threshold){
-
-        if(currentAcc < threshold){
-            return 1; // Step detected
+    // Function to detect steps based on angle shank
+    // Note: there might be multiple thresholds needed if we want to optimize the step detection
+    // these can either be inputted as a vector or as multiple arguments
+    int detect_step_angle(vector <float> angle, float threshold){
+        int stepTest;
+        if(angle[0] < threshold){
+            stepTest = 1; // Step detected
         } else {
-            return 0; // No step detected
+            stepTest = 0; // No step detected
         }
+        return stepTest;
     }
 
+    // This function is not needed for the implementation
     void print_csv(const vector<vector<float>>& angles, const vector<vector<float>>& accels, const vector<float>& times, const vector<float>& steps) {
         // Print CSV header
         //printf("Time,Angle_X,Angle_Y,Angle_Z,Accel_X,Accel_Y,Accel_Z\n");
@@ -128,7 +123,6 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         }
     } 
     
-
 int main() {
     stdio_init_all();
     
@@ -153,30 +147,17 @@ int main() {
         printf("Failed to enable Game Rotation Vector!\n");
     }
 
-    // Enable the step counter
-    if (!IMU.enableStepCounter(100)) {
-        printf("Failed to enable Step Counter!\n");
-        return -1;
-    }
-
-    //const float RAD_TO_DEG = 180.0f / M_PI;
-    //float yaw = 0.0f, pitch = 0.0f, roll = 0.0f;
-    // User input
-    // std::cin >> L_shank_ini;
-    // std::cin >> L_thigh_ini;
-    // std::cin >> m;
+    // User input (currently set in the code, but should be inputted by user in the app)
     const float L_shank_ini=40; const float L_thigh_ini=50; const float m=75.0;
+
     //printf("L_shank_ini %f\n", L_shank_ini);
-    float pitch = 0.0f, yaw = 0.0f, roll= 0.0f; 
-    uint8_t accAccuracy = 0; 
+    float pitch = 0.0f, yaw = 0.0f, roll= 0.0f;
     float accX = 0.0f, accY = 0.0f, accZ = 0.0f; // Accelerometer values
     float gyroX = 0.0f, gyroY = 0.0f, gyroZ = 0.0f; // Gyroscope values
-    uint8_t gyroAccuracy = 0.0f; // Gyroscope accuracy
     float angleX = 0.0f, angleY = 0.0f, angleZ = 0.0f; // Angle values
-    uint8_t angleAccuracy = 0.0f; // Angle accuracy
     uint16_t adcresult; //starting ADC
     bool adcbool = false; //ADC boolean
-    float threshold = -0.064f;
+    float thresholdAngle = -1.45f;
 
     // // Initialize velocities
     vector <float> v_IMU= {0,0,0};
@@ -188,13 +169,8 @@ int main() {
     vector <float> pre_v_thigh= {0,0,0};
     vector <float> pre_v_knee= {0,0,0};
     vector <float> pre_v_hip= {0,0,0};
-    vector <float> pre_v_IMU= {0,0,0};
     vector <float> w_thigh= {0,0,0};
     vector <float> w_IMU= {0,0,0};
-
-    //Initialize sensor data
-    vector<float> prev_accel = {0, 0, 0};
-    vector<float> prev_gyro = {0, 0, 0};
 
     // Initialize acceleration variables
     vector <float> a_IMU = {0,0,0};
@@ -224,13 +200,8 @@ int main() {
 
     float timeStamp = 0.0f;
     float startTimeStamp = time_us_64() / 1000.0f;
-    uint16_t stepDetector = 0;
-    uint16_t prev_stepDetector = 0;
-    uint8_t tapDetector = 0;
-    int stepCounterInterval = 32 / 5;
-    int loopCounter = 0;
     int step = 0;
-    int stepDetectorTest = 0;
+    int stepDetector = 0;
 
     vector<vector<float>> toExportAngle;
     vector<vector<float>> toExportAccel;
@@ -247,13 +218,6 @@ int main() {
             roll = IMU.getRoll();
             //printf("Roll X %f\n Pitch Y %f\n Yaw Z %f\n", roll, pitch, yaw);
 
-            // // Optional: print quaternions
-            // float qi = IMU.getGameQuatI();
-            // float qj = IMU.getGameQuatJ();
-            // float qk = IMU.getGameQuatK();
-            // float qr = IMU.getGameQuatReal();
-            // //printf("Quat: i=%.2f, j=%.2f, k=%.2f, r=%.2f\n", qi, qj, qk, qr);
-
             accX = IMU.getLinAccelX();
             accY = IMU.getLinAccelY();
             accZ = IMU.getLinAccelZ();
@@ -266,30 +230,11 @@ int main() {
 
             timeStamp = (time_us_64() / 1000.0f) - startTimeStamp; // Time in seconds
             //printf("timeStamp %f\n", timeStamp);
-
-            //step detector
-            loopCounter++;
-
-            if (loopCounter >= stepCounterInterval) {
-                stepDetector = IMU.getStepCount();
-                printf("Step Count: %u\n", stepDetector);
-                loopCounter = 0; // Reset the counter
-
-                if (stepDetector == prev_stepDetector) {
-                    step = 0;
-                }
-                else {
-                    step = 1;
-                }
-                // printf("Step: %d\n", step);
-    
-                prev_stepDetector = stepDetector;
-            }
             }
 
            // Store sensor data in vector
             a_IMU = {accX, accY, accZ};
-            //printf("a IMU X %f\n a IMU Y %f\n a IMU Z %f\n", a_IMU[0], a_IMU[1], a_IMU[2]);
+            printf("a IMU X %f\n a IMU Y %f\n a IMU Z %f\n", a_IMU[0], a_IMU[1], a_IMU[2]);
             w_IMU = {gyroX, gyroY, gyroZ};
             //printf("w IMU X %f\n w IMU Y %f\n w IMU Z %f\n", w_IMU[0], w_IMU[1], w_IMU[2]);
             angle_IMU = {roll, pitch, yaw};
@@ -308,7 +253,6 @@ int main() {
 
             // Integrate a_IMU to obtain v_IMU
             v_IMU= integrate(a_IMU, pre_a_IMU, v_IMU, dt);
-            //v_IMU = integrate(a_IMU,v_IMU,dt);
             //printf("v IMU X %f\n v IMU Y %f\n v IMU Z %f\n", v_IMU[0], v_IMU[1], v_IMU[2]);
             
             // Calculate velocity and acceleration shank
@@ -332,23 +276,22 @@ int main() {
             a_hip = differentiate(v_hip, pre_v_hip, dt);
             //printf("a hip X %f\n a hip Y %f\n a hip Z %f\n", a_hip[0], a_hip[1], a_hip[2]);
             //printf("v hip X %f\n v hip Y %f\n v hip Z %f\n", v_hip[0], v_hip[1], v_hip[2]);
+
+            stepDetector = detect_step_angle(angle_IMU, thresholdAngle);
+            printf("Step: %d\n", stepDetector);
+
             // Assign current value to previous value
             pre_angle_thigh = angle_thigh;
             pre_v_thigh = v_thigh;
             pre_v_hip = v_hip;
-            pre_v_IMU = v_IMU;
             pre_v_shank = v_shank;
             pre_a_IMU = a_IMU;
-           //vector <float> pre_v_IMU2= {v_IMU};
+
             // Calculate GRF
             GRF = calculate_grf(a_shank, a_thigh, a_hip, m);
-
-            // Stepdetector
-            // stepDetectorTest = detect_step(a_IMU[0], threshold);
-            // printf("Step: %d\n", step);
+            printf("GRF X %f\n GRF Y %f\n GRF Z %f\n", GRF[0], GRF[1], GRF[2]);
 
             // Return GRF, timestamp and step
-            //printf("GRF X %f\n GRF Y %f\n GRF Z %f\n", GRF[0], GRF[1], GRF[2]);
 
             adcresult = adc_read();
 
@@ -360,6 +303,7 @@ int main() {
             }
             // printf("Raw value: 0x%03x, voltage: %f V\n", adcresult, adcresult * conversion_factor, adcbool);
 
+            // Safe data in CSV
             toExportAngle.emplace_back(angle_IMU);
             toExportTime.emplace_back(timeStamp);
             toExportAccel.emplace_back(a_IMU);
