@@ -102,17 +102,16 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         return {grf_x, grf_y, grf_z};
     }
 
-    void print_csv(const vector<vector<float>>& angles, const vector<float>& times) {
+    void print_csv(const vector<vector<float>>& angles, const vector<vector<float>>& accels, const vector<float>& times) {
         // Print CSV header
-        //printf("Time,Angle_X,Angle_Y,Angle_Z\n");
+        printf("Time,Angle_X,Angle_Y,Angle_Z,Accel_X,Accel_Y,Accel_Z\n");
     
         // Iterate through the data and print each row
         for (size_t i = 0; i < times.size(); ++i) {
-            printf("%.3f,%.3f,%.3f,%.3f\n", 
+            printf("%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n", 
                    times[i], 
-                   angles[i][0], 
-                   angles[i][1], 
-                   angles[i][2]);
+                   angles[i][0], angles[i][1], angles[i][2], 
+                   accels[i][0], accels[i][1], accels[i][2]);
         }
     }
     
@@ -294,8 +293,7 @@ int main() {
             toExportAccel.emplace_back(a_IMU);
 
             if (toExportTime.size() >= 100) {
-                print_csv(toExportAngle, toExportTime);
-                print_csv(toExportAccel,toExportTime);
+                print_csv(toExportAngle, toExportAccel, toExportTime);
                 toExportAngle.clear();
                 toExportAccel.clear();
                 toExportTime.clear();
