@@ -297,7 +297,7 @@ int main() {
                 toExportTime.clear();
             }
 
-            if (timeStamp >= 60.0f * 1000.0f) { // Stop after 10 seconds
+            if (timeStamp >= 120.0f * 1000.0f) { // Stop after 10 seconds
                 break;
             }
         sleep_ms(5);  // Sleep 5 mili sec until next sample to be taken
@@ -305,4 +305,3 @@ int main() {
 
     return 0;
 }
-
