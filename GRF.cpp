@@ -143,6 +143,12 @@ int main() {
         printf("Failed to enable Game Rotation Vector!\n");
     }
 
+    // Enable the step counter
+    if (!IMU.enableStepCounter(100)) {
+        printf("Failed to enable Step Counter!\n");
+        return -1;
+    }
+
     //const float RAD_TO_DEG = 180.0f / M_PI;
     //float yaw = 0.0f, pitch = 0.0f, roll = 0.0f;
     // User input
@@ -245,7 +251,7 @@ int main() {
             //printf("timeStamp %f\n", timeStamp);
 
             //step detector
-            stepDetector = IMU.getTapDetector();
+            stepDetector = IMU.getStepCount();
             }
 
            // Store sensor data in vector
