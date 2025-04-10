@@ -313,10 +313,6 @@ int main() {
             // Return GRF, timestamp and stepdetector
             //printf("GRF X %f\n GRF Y %f\n GRF Z %f\n", GRF[0], GRF[1], GRF[2]);
 
-            toExportAngle.emplace_back(angle_IMU);
-            toExportTime.emplace_back(timeStamp);
-
-            
             adcresult = adc_read();
 
             if (adcresult * conversion_factor >= 0.03) {
@@ -325,8 +321,10 @@ int main() {
             else {
                 adcbool = false;
             }
-            printf("Raw value: 0x%03x, voltage: %f V\n", adcresult, adcresult * conversion_factor, adcbool);
+            // printf("Raw value: 0x%03x, voltage: %f V\n", adcresult, adcresult * conversion_factor, adcbool);
 
+            toExportAngle.emplace_back(angle_IMU);
+            toExportTime.emplace_back(timeStamp);
             toExportAccel.emplace_back(a_IMU);
             toExportStep.emplace_back(stepDetector);
 
