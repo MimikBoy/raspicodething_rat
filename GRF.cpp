@@ -104,7 +104,7 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
 
     void print_csv(const vector<vector<float>>& angles, const vector<vector<float>>& accels, const vector<float>& times) {
         // Print CSV header
-        printf("Time,Angle_X,Angle_Y,Angle_Z,Accel_X,Accel_Y,Accel_Z\n");
+        //printf("Time,Angle_X,Angle_Y,Angle_Z,Accel_X,Accel_Y,Accel_Z\n");
     
         // Iterate through the data and print each row
         for (size_t i = 0; i < times.size(); ++i) {
@@ -293,7 +293,7 @@ int main() {
             toExportAccel.emplace_back(a_IMU);
 
             if (toExportTime.size() >= 100) {
-                //print_csv(toExportAngle, toExportAccel, toExportTime);
+                print_csv(toExportAngle, toExportAccel, toExportTime);
                 toExportAngle.clear();
                 toExportAccel.clear();
                 toExportTime.clear();
