@@ -262,6 +262,16 @@ int main() {
                 stepDetector = IMU.getStepCount();
                 printf("Step Count: %d\n", stepDetector);
                 loopCounter = 0; // Reset the counter
+
+                if (stepDetector == prev_stepDetector) {
+                    step = 0;
+                }
+                else {
+                    step = 1;
+                }
+                printf("Step: %d\n", step);
+    
+                prev_stepDetector = stepDetector;
             }
 
             // stepDetector = IMU.getStepCount();
@@ -270,16 +280,6 @@ int main() {
             // tapDetector = IMU.getTapDetector();
             // printf("Tap: %d\n", tapDetector);
             }
-
-            if (stepDetector == prev_stepDetector) {
-                step = 0;
-            }
-            else {
-                step = 1;
-            }
-            printf("Step: %d\n", step);
-
-            prev_stepDetector = stepDetector;
 
            // Store sensor data in vector
             a_IMU = {accX, accY, accZ};
