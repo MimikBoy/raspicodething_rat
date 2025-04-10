@@ -102,14 +102,15 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         return {grf_x, grf_y, grf_z};
     }
 
-    void print_csv(const vector<vector<float>>& angles, const vector<vector<float>>& accels, const vector<float>& times) {
+    void print_csv(const vector<vector<float>>& angles, const vector<vector<float>>& accels, const vector<float>& times, const vector<float>& steps) {
         // Print CSV header
         //printf("Time,Angle_X,Angle_Y,Angle_Z,Accel_X,Accel_Y,Accel_Z\n");
     
         // Iterate through the data and print each row
         for (size_t i = 0; i < times.size(); ++i) {
-            printf("%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n", 
-                   times[i], 
+            printf("%.3f,%.3f,%.3f%.3f,%.3f,%.3f,%.3f,%.3f\n", 
+                   times[i],
+                   steps[i], 
                    angles[i][0], angles[i][1], angles[i][2], 
                    accels[i][0], accels[i][1], accels[i][2]);
         }
@@ -195,10 +196,13 @@ int main() {
 
     float timeStamp = 0.0f;
     float startTimeStamp = time_us_64() / 1000.0f;
+    float stepDetector = 0.0f;
 
     vector<vector<float>> toExportAngle;
     vector<vector<float>> toExportAccel;
     vector<float> toExportTime;
+    vector<float> toExportStep;
+
     while (true) 
     {
         // Read sensor data
@@ -228,6 +232,9 @@ int main() {
 
             timeStamp = (time_us_64() / 1000.0f) - startTimeStamp; // Time in seconds
             //printf("timeStamp %f\n", timeStamp);
+
+            //step detector
+            stepDetector = IMU.getTapDetector();
             }
 
            // Store sensor data in vector
@@ -285,7 +292,8 @@ int main() {
            //vector <float> pre_v_IMU2= {v_IMU};
             // Calculate GRF
             GRF = calculate_grf(a_shank, a_thigh, a_hip, m);
-            // Return GRF and timestamp here
+
+            // Return GRF, timestamp and stepdetector
             //printf("GRF X %f\n GRF Y %f\n GRF Z %f\n", GRF[0], GRF[1], GRF[2]);
 
             toExportAngle.emplace_back(angle_IMU);
@@ -293,10 +301,11 @@ int main() {
             toExportAccel.emplace_back(a_IMU);
 
             if (toExportTime.size() >= 100) {
-                print_csv(toExportAngle, toExportAccel, toExportTime);
+                print_csv(toExportAngle, toExportAccel, toExportTime, toExportStep);
                 toExportAngle.clear();
                 toExportAccel.clear();
                 toExportTime.clear();
+                toExportStep.clear();
             }
 
             if (timeStamp >= 500.0f * 1000.0f) { // Stop after 10 seconds
