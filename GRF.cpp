@@ -107,6 +107,17 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         }
         return stepTest;
     }
+
+    bool ADCthreshold(float adcresult, float conversion_factor){
+        bool adcbool;
+        if (adcresult * conversion_factor >= 0.03) {
+            adcbool = true;
+        }
+        else {
+            adcbool = false;
+        }
+        return adcbool;
+    }
     
     // This function is not needed for the implementation
     void print_csv(const vector<vector<float>>& accels, const vector<vector<float>>& angle, const vector<float>& times, const vector<float>& steps) {
@@ -301,12 +312,7 @@ int main() {
             // Hidde's step detector
             adcresult = adc_read();
 
-            if (adcresult * conversion_factor >= 0.03) {
-                adcbool = true;
-            }
-            else {
-                adcbool = false;
-            }
+            adcbool = ADCthreshold(adcresult, conversion_factor);
             //printf("Raw value: 0x%03x, voltage: %f V bool: %s\n", adcresult, adcresult * conversion_factor, adcbool ? "true" : "false");
 
             // Safe data in CSV
