@@ -205,6 +205,10 @@ int main() {
     // Initialize GRF
     vector<float> GRF;
 
+    // Lookup table thigh angle
+    vector<float> LookUp_shank = {};
+    vector<float> LookUp_thigh = ;
+
     // Constants
     const float COM_shank = 0.5726;  // Values taken from paper in Zotero
     const float COM_thigh = 0.4095;
