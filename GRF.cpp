@@ -108,18 +108,31 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         return stepTest;
     }
 
+    // Function to return gait cycle time
+    float gait_cycle_time(float stepDetector, float pre_stepDetector, float pre_moment, float timeStamp){
+
+        if(stepDetector == 1 && pre_stepDetector == 0){
+            float moment = timeStamp;
+            return moment;
+            float momentDifference = moment - pre_moment;
+            return momentDifference;
+        }
+    }
+
     // This function is not needed for the implementation
-    void print_csv(const vector<vector<float>>& angles, const vector<vector<float>>& accels, const vector<float>& times, const vector<float>& steps) {
+    void print_csv(const vector<vector<float>>& accels, const vector<vector<float>>& accelsG, const vector<float>& times, const vector<float>& steps) {
         // Print CSV header
         //printf("Time,Angle_X,Angle_Y,Angle_Z,Accel_X,Accel_Y,Accel_Z\n");
     
         // Iterate through the data and print each row
         for (size_t i = 0; i < times.size(); ++i) {
-            printf("%.3f,%.3f,%.3f%.3f,%.3f,%.3f,%.3f,%.3f\n", 
-                    steps[i],
-                    times[i], 
-                    angles[i][0], angles[i][1], angles[i][2], 
-                    accels[i][0], accels[i][1], accels[i][2]);
+
+            printf("%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n", 
+                    // steps[i],
+                    // times[i], 
+                    //angles[i][0], angles[i][1], angles[i][2], 
+                    accels[i][0], accels[i][1], accels[i][2],
+                    accelsG[i][0], accelsG[i][1], accelsG[i][2]);
         }
     } 
     
@@ -153,6 +166,7 @@ int main() {
     //printf("L_shank_ini %f\n", L_shank_ini);
     float pitch = 0.0f, yaw = 0.0f, roll= 0.0f;
     float accX = 0.0f, accY = 0.0f, accZ = 0.0f; // Accelerometer values
+    float accXgravity = 0.0f, accYgravity = 0.0f, accZgravity = 0.0f; // Gravity values
     float gyroX = 0.0f, gyroY = 0.0f, gyroZ = 0.0f; // Gyroscope values
     float angleX = 0.0f, angleY = 0.0f, angleZ = 0.0f; // Angle values
     uint16_t adcresult; //starting ADC
@@ -174,6 +188,7 @@ int main() {
 
     // Initialize acceleration variables
     vector <float> a_IMU = {0,0,0};
+    vector <float> a_IMU_gravity = {0,0,0};
     vector<float> a_shank = {0,0,0};
     vector<float> a_thigh = {0,0,0};
     vector<float> a_hip = {0,0,0};
@@ -202,8 +217,10 @@ int main() {
     float startTimeStamp = time_us_64() / 1000.0f;
     int step = 0;
     int stepDetector = 0;
+    int pre_stepDetector = 0;
 
     vector<vector<float>> toExportAngle;
+    vector<vector<float>> toExportAccelG;
     vector<vector<float>> toExportAccel;
     vector<float> toExportTime;
     vector<float> toExportStep;
@@ -223,6 +240,10 @@ int main() {
             accZ = IMU.getLinAccelZ();
             //printf("Acc X IMU %f\n Acc Y IMU %f\n Acc Z IMU %f\n", accX, accY, accZ);
 
+            accXgravity = IMU.getAccelX();
+            accYgravity = IMU.getAccelY();
+            accZgravity = IMU.getAccelZ();
+
             gyroX = IMU.getGyroX();
             gyroY = IMU.getGyroY();
             gyroZ = IMU.getGyroZ();
@@ -234,8 +255,9 @@ int main() {
 
            // Store sensor data in vector
             a_IMU = {accX, accY, accZ};
-            printf("a IMU X %f\n a IMU Y %f\n a IMU Z %f\n", a_IMU[0], a_IMU[1], a_IMU[2]);
-            w_IMU = {gyroX, gyroY, gyroZ};
+            //printf("a IMU X %f\n a IMU Y %f\n a IMU Z %f\n", a_IMU[0], a_IMU[1], a_IMU[2]);
+            a_IMU_gravity = {accXgravity, accYgravity, accZgravity};
+            w_IMU = {gyroX, gyroY, gyroY};
             //printf("w IMU X %f\n w IMU Y %f\n w IMU Z %f\n", w_IMU[0], w_IMU[1], w_IMU[2]);
             angle_IMU = {roll, pitch, yaw};
             //printf("Angle IMU X %f\n Angle IMU Y %f\n Angle IMU Z %f\n", angle_IMU[0], angle_IMU[1], angle_IMU[2]);
@@ -278,7 +300,7 @@ int main() {
             //printf("v hip X %f\n v hip Y %f\n v hip Z %f\n", v_hip[0], v_hip[1], v_hip[2]);
 
             stepDetector = detect_step_angle(angle_IMU, thresholdAngle);
-            printf("Step: %d\n", stepDetector);
+            // printf("Step: %d\n", stepDetector);
 
             // Assign current value to previous value
             pre_angle_thigh = angle_thigh;
@@ -286,10 +308,11 @@ int main() {
             pre_v_hip = v_hip;
             pre_v_shank = v_shank;
             pre_a_IMU = a_IMU;
+            pre_stepDetector = stepDetector;
 
             // Calculate GRF
             GRF = calculate_grf(a_shank, a_thigh, a_hip, m);
-            printf("GRF X %f\n GRF Y %f\n GRF Z %f\n", GRF[0], GRF[1], GRF[2]);
+            // printf("GRF X %f\n GRF Y %f\n GRF Z %f\n", GRF[0], GRF[1], GRF[2]);
 
             // Return GRF, timestamp and step
 
@@ -301,17 +324,18 @@ int main() {
             else {
                 adcbool = false;
             }
-            // printf("Raw value: 0x%03x, voltage: %f V\n", adcresult, adcresult * conversion_factor, adcbool);
+            //printf("Raw value: 0x%03x, voltage: %f V bool: %s\n", adcresult, adcresult * conversion_factor, adcbool ? "true" : "false");
 
             // Safe data in CSV
             toExportAngle.emplace_back(angle_IMU);
             toExportTime.emplace_back(timeStamp);
             toExportAccel.emplace_back(a_IMU);
+            toExportAccelG.emplace_back(a_IMU_gravity);
             toExportStep.emplace_back((float)stepDetector);
 
 
             if (toExportTime.size() >= 100) {
-                //print_csv(toExportAngle, toExportAccel, toExportTime, toExportStep);
+                print_csv(toExportAccel, toExportAccelG, toExportTime, toExportStep);
                 toExportAngle.clear();
                 toExportAccel.clear();
                 toExportTime.clear();
