@@ -107,19 +107,7 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         }
         return stepTest;
     }
-
-    // Function to return gait cycle time
-    // Note this function is not yet used
-    float gait_cycle_time(float stepDetector, float pre_stepDetector, float pre_moment, float timeStamp){
-
-        if(stepDetector == 1 && pre_stepDetector == 0){
-            float moment = timeStamp;
-            return moment;
-            float momentDifference = moment - pre_moment;
-            return momentDifference;
-        }
-    }
-
+    
     // This function is not needed for the implementation
     void print_csv(const vector<vector<float>>& accels, const vector<vector<float>>& angle, const vector<float>& times, const vector<float>& steps) {
         // Print CSV header
