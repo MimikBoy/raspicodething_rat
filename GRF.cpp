@@ -97,10 +97,10 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
 
     // Function to detect steps based on angle shank
     // Note: there might be multiple thresholds needed if we want to optimize the step detection
-    // these can either be inputted as a vector or as multiple arguments
-    int detect_step_angle(vector <float> angle, float threshold){
+    // these can either be inputted using the vector
+    int detect_step_angle(vector <float> angle, vector <float> threshold){
         int stepTest;
-        if(angle[0] < threshold){
+        if(angle[0] < threshold[0]){
             stepTest = 1; // Step detected
         } else {
             stepTest = 0; // No step detected
@@ -157,7 +157,7 @@ int main() {
     float angleX = 0.0f, angleY = 0.0f, angleZ = 0.0f; // Angle values
     uint16_t adcresult; //starting ADC
     bool adcbool = false; //ADC boolean
-    float thresholdAngle = -1.45f;
+    vector <float> thresholdAngle = {-1.45f};
 
     // // Initialize velocities
     vector <float> v_IMU= {0,0,0};
