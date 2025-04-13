@@ -121,6 +121,13 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         return stepTest;
     }
 
+    vector <float> moment_of_step(int stepDetector, int pre_stepDetector, vector <float> timeStep, float timeStamp){
+        if(stepDetector == 1 && pre_stepDetector == 0){
+            timeStep.push_back(timeStamp); // Step detected, return the timestamp
+        }
+        return timeStep;
+    } 
+
     bool ADCthreshold(float adcresult, float conversion_factor){
         bool adcbool;
         if (adcresult * conversion_factor >= 0.03) {
@@ -219,7 +226,7 @@ int main() {
     vector<float> GRF;
 
     // Lookup table thigh angle
-    vector<float> LookUp_shank = {-3.14159265358979
+    vector<float> LookUp_shank = {-3.14159265358979,
         -3.13530317880783,
         -3.12901370402587,
         -3.12272422924391,
@@ -2232,6 +2239,7 @@ int main() {
     int step = 0;
     int stepDetector = 0;
     int pre_stepDetector = 0;
+    vector<float> stepTime = {};
 
     vector<vector<float>> toExportAngle;
     vector<vector<float>> toExportAccelG;
@@ -2309,6 +2317,7 @@ int main() {
             //printf("v hip X %f\n v hip Y %f\n v hip Z %f\n", v_hip[0], v_hip[1], v_hip[2]);
 
             stepDetector = detect_step_angle(angle_IMU, thresholdAngle);
+            stepTime = moment_of_step(stepDetector, pre_stepDetector, stepTime, timeStamp);
             // printf("Step: %d\n", stepDetector);
 
             // Assign current value to previous value
