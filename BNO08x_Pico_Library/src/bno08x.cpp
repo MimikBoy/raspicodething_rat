@@ -802,7 +802,7 @@ bool BNO08x::enableARVRStabilizedRotationVector(uint16_t timeBetweenReports)
 //Sends the packet to enable the rotation vector
 bool BNO08x::enableGameRotationVector(uint16_t timeBetweenReports)
 {
-	timeBetweenReports  = timeBetweenReports;// * 1000; // ms to us
+	timeBetweenReports  = timeBetweenReports * 1000; // ms to us
 	return enableReport(SH2_GAME_ROTATION_VECTOR, timeBetweenReports);
 }
 
@@ -837,7 +837,7 @@ bool BNO08x::enableGravity(uint16_t timeBetweenReports)
 //Sends the packet to enable the gyro
 bool BNO08x::enableGyro(uint16_t timeBetweenReports)
 {
-	timeBetweenReports  = timeBetweenReports; // * 1000; // ms to us
+	timeBetweenReports  = timeBetweenReports * 1000; // ms to us
 	return enableReport(SENSOR_REPORTID_GYROSCOPE_CALIBRATED, timeBetweenReports);		
 }
 

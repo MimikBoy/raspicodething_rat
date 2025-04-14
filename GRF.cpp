@@ -154,29 +154,32 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
     }
 
     // Print function
-    void print_csv(const vector<float>& times, const vector<vector<float>>& GRFs, const vector<vector<float>>& accelerations, const vector<vector<float>>& gyros, const vector<vector<float>>& angles) {
+    void print_csv(const vector<float>& times, const vector<vector<float>>& GRFs, const vector<vector<float>>& accelerations, const vector<vector<float>>& gyros, const vector<vector<float>>& angles, const vector<vector<float>>& accelerationsRaw, const vector<vector<float>>& gyrosRaw, const vector<vector<float>>& anglesRaw) {
         // Print CSV header
     
         // Iterate through the data and print each row
         for (size_t i = 0; i < times.size(); ++i) {
 
-            printf("%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n", 
+            printf("%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n", 
                     times[i],
                     GRFs[i][0], GRFs[i][1], GRFs[i][2],
                     accelerations[i][0], accelerations[i][1], accelerations[i][2],
                     gyros[i][0], gyros[i][1], gyros[i][2],
-                    angles[i][0], angles[i][1], angles[i][2]);
+                    angles[i][0], angles[i][1], angles[i][2],
+                    accelerationsRaw[i][0], accelerationsRaw[i][1], accelerationsRaw[i][2],
+                    gyrosRaw[i][0], gyrosRaw[i][1], gyrosRaw[i][2],
+                    anglesRaw[i][0], anglesRaw[i][1], anglesRaw[i][2]);
         }
     }
     
     // Filter IMU data
-    // vector<float> filter_ema(vector<float> current, vector<float> previous, float alpha) {
-    //     return {
-    //         previous[0] + alpha * (current[0] - previous[0]),
-    //         previous[1] + alpha * (current[1] - previous[1]),
-    //         previous[2] + alpha * (current[2] - previous[2])
-    //     };
-    // }
+    vector<float> filter_ema(vector<float> current, vector<float> previous, float alpha) {
+        return {
+            previous[0] + alpha * (current[0] - previous[0]),
+            previous[1] + alpha * (current[1] - previous[1]),
+            previous[2] + alpha * (current[2] - previous[2])
+        };
+    }
     
 int main() {
     stdio_init_all();
@@ -199,11 +202,11 @@ int main() {
     }
 
     IMU.enableStepCounter();
-    IMU.enableLinearAccelerometer(100);
-    IMU.enableGyro(100);
+    IMU.enableLinearAccelerometer();
+    IMU.enableGyro();
 
 
-    if (!IMU.enableGameRotationVector(100)) {
+    if (!IMU.enableGameRotationVector()) {
         printf("Failed to enable Game Rotation Vector!\n");
     }
 
@@ -2265,6 +2268,12 @@ int main() {
     int stepDetector = 0;
     float stepCounter = 0.0f;
     float pre_stepCounter = 0.0f;
+    float alpha = 0.1f;
+
+    // Raw data vectors
+    vector<float> a_IMU_raw = {0,0,0};
+    vector<float> w_IMU_raw = {0,0,0};
+    vector<float> angle_IMU_raw = {0,0,0};
 
     // Print CSV
     vector<float> toExportTime;
@@ -2272,6 +2281,9 @@ int main() {
     vector<vector<float>> toExportAcc;
     vector<vector<float>> toExportGyro;
     vector<vector<float>> toExportAngle;
+    vector<vector<float>> toExportAccRaw;
+    vector<vector<float>> toExportGyroRaw;
+    vector<vector<float>> toExportAngleRaw;
 
     while (true) 
     {
@@ -2300,12 +2312,14 @@ int main() {
             }
 
            // Store sensor data in vector
-            a_IMU = {accZ, accY, accX};
-            w_IMU = {gyroZ, gyroY, gyroX};
-            angle_IMU = {roll, pitch, yaw};
+            a_IMU_raw = {accZ, accY, accX};
+            w_IMU_raw = {gyroZ, gyroY, gyroX};
+            angle_IMU_raw = {roll, pitch, yaw};
 
             // Filter sensor data
-            // a_IMU = filter_ema(a_IMU_raw, a_IMU, alpha);
+            a_IMU = filter_ema(a_IMU_raw, a_IMU, alpha);
+            w_IMU = filter_ema(w_IMU_raw, w_IMU, alpha);
+            angle_IMU = filter_ema(angle_IMU_raw, angle_IMU, alpha);
             
             vector<float> angle_thigh = estimate_angle_thigh(angle_IMU, LookUp_shank, LookUp_thigh);
 
@@ -2363,15 +2377,22 @@ int main() {
             toExportAcc.emplace_back(a_IMU);
             toExportGyro.emplace_back(w_IMU);
             toExportAngle.emplace_back(angle_IMU);
+            toExportAccRaw.emplace_back(a_IMU_raw);
+            toExportGyroRaw.emplace_back(w_IMU_raw);
+            toExportAngleRaw.emplace_back(angle_IMU_raw);
+
             
 
             if (toExportTime.size() >= 100) {
-                print_csv(toExportTime, toExportGRF, toExportAcc, toExportGyro, toExportAngle);
+                print_csv(toExportTime, toExportGRF, toExportAcc, toExportGyro, toExportAngle, toExportAccRaw, toExportGyroRaw, toExportAngleRaw);
                 toExportTime.clear();
                 toExportGRF.clear();
                 toExportAcc.clear();
                 toExportGyro.clear();
                 toExportAngle.clear();
+                toExportAccRaw.clear();
+                toExportGyroRaw.clear();
+                toExportAngleRaw.clear();
             }
 
             if (timeStamp >= 500.0f * 1000.0f) { // Stop after 10 seconds
