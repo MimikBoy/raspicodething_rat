@@ -172,6 +172,7 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         }
     }
     
+    // CHANGE: FILTER IMU
     // Filter IMU data
     vector<float> filter_ema(vector<float> current, vector<float> previous, float alpha) {
         return {
@@ -2268,8 +2269,11 @@ int main() {
     int stepDetector = 0;
     float stepCounter = 0.0f;
     float pre_stepCounter = 0.0f;
+
+    //CHANGE: ALPHA VALUE
     float alpha = 0.1f;
 
+    // CHANGE: INITIALIZE THE RAW DATA VECTORS
     // Raw data vectors
     vector<float> a_IMU_raw = {0,0,0};
     vector<float> w_IMU_raw = {0,0,0};
@@ -2289,20 +2293,26 @@ int main() {
     {
         // Read sensor data
             if (IMU.getSensorEvent() == true){
-        
+            
+            // CHANGE: SENSORIDS
+            if (IMU.getSensorEventID() == SENSOR_REPORTID_GAME_ROTATION_VECTOR) {   
             yaw = IMU.getGameYaw();
             pitch = IMU.getGamePitch();
             roll = IMU.getRoll();
-
-
+            }
+            
+            if (IMU.getSensorEventID() == SENSOR_REPORTID_LINEAR_ACCELERATION) {
             accX = IMU.getLinAccelX();
             accY = IMU.getLinAccelY();
             accZ = IMU.getLinAccelZ();
-
-            gyroX = IMU.getGyroX();
-            gyroY = IMU.getGyroY();
-            gyroZ = IMU.getGyroZ();
-
+            }
+            
+            if (IMU.getSensorEventID() == SENSOR_REPORTID_GYROSCOPE_CALIBRATED) {
+                gyroX = IMU.getGyroX();
+                gyroY = IMU.getGyroY();
+                gyroZ = IMU.getGyroZ();
+            }
+            
             timeStamp = (time_us_64() / 1000.0f) - startTimeStamp; // Time in seconds
 
             if (IMU.getSensorEventID() == SENSOR_REPORTID_STEP_COUNTER) {
@@ -2311,6 +2321,7 @@ int main() {
 
             }
 
+            // CHANGE: RAW DATA AND FILTERED DATA
            // Store sensor data in vector
             a_IMU_raw = {accZ, accY, accX};
             w_IMU_raw = {gyroZ, gyroY, gyroX};
@@ -2319,7 +2330,7 @@ int main() {
             // Filter sensor data
             a_IMU = filter_ema(a_IMU_raw, a_IMU, alpha);
             w_IMU = filter_ema(w_IMU_raw, w_IMU, alpha);
-            angle_IMU = filter_ema(angle_IMU_raw, angle_IMU, alpha);
+            angle_IMU = angle_IMU_raw;
             
             vector<float> angle_thigh = estimate_angle_thigh(angle_IMU, LookUp_shank, LookUp_thigh);
 
@@ -2380,8 +2391,6 @@ int main() {
             toExportAccRaw.emplace_back(a_IMU_raw);
             toExportGyroRaw.emplace_back(w_IMU_raw);
             toExportAngleRaw.emplace_back(angle_IMU_raw);
-
-            
 
             if (toExportTime.size() >= 100) {
                 print_csv(toExportTime, toExportGRF, toExportAcc, toExportGyro, toExportAngle, toExportAccRaw, toExportGyroRaw, toExportAngleRaw);
