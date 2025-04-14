@@ -167,7 +167,16 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
                     gyros[i][0], gyros[i][1], gyros[i][2],
                     angles[i][0], angles[i][1], angles[i][2]);
         }
-    } 
+    }
+    
+    // Filter IMU data
+    // vector<float> filter_ema(vector<float> current, vector<float> previous, float alpha) {
+    //     return {
+    //         previous[0] + alpha * (current[0] - previous[0]),
+    //         previous[1] + alpha * (current[1] - previous[1]),
+    //         previous[2] + alpha * (current[2] - previous[2])
+    //     };
+    // }
     
 int main() {
     stdio_init_all();
@@ -190,6 +199,8 @@ int main() {
     }
 
     IMU.enableStepCounter();
+    IMU.enableLinearAccelerometer(100);
+    IMU.enableGyro(100);
 
 
     if (!IMU.enableGameRotationVector(100)) {
@@ -2292,6 +2303,9 @@ int main() {
             a_IMU = {accZ, accY, accX};
             w_IMU = {gyroZ, gyroY, gyroX};
             angle_IMU = {roll, pitch, yaw};
+
+            // Filter sensor data
+            // a_IMU = filter_ema(a_IMU_raw, a_IMU, alpha);
             
             vector<float> angle_thigh = estimate_angle_thigh(angle_IMU, LookUp_shank, LookUp_thigh);
 
