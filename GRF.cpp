@@ -121,6 +121,30 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         return stepTest;
     }
 
+    pair<int, float> detect_step_pico(float stepCounter, float pre_stepCounter, float timestamp){
+        int stepEvent;
+        float timeEvent;
+        if(stepCounter == pre_stepCounter){
+            stepEvent = 0;
+        }
+        else {
+            stepEvent = 1;
+            timeEvent = timestamp;
+        }
+        return make_pair(stepEvent, timeEvent);
+    }
+
+    int detect_step(int stepEvent, float timeEvent, float timeStamp){
+        int stepDetector;
+            if (timeEvent + 200.0f > timeStamp){
+                stepDetector = 1;
+            }
+            else {
+                stepDetector = 0;
+            }
+            return stepDetector;
+    }
+
     vector <float> moment_of_step(int stepDetector, int pre_stepDetector, vector <float> timeStep, float timeStamp){
         if(stepDetector == 1 && pre_stepDetector == 0){
             timeStep.push_back(timeStamp); // Step detected, return the timestamp
@@ -175,6 +199,15 @@ int main() {
         scan_i2c_bus();
         sleep_ms(1000);
     }
+
+    while (IMU.begin(CONFIG::BNO08X_ADDR, i2c_port0)==false) {
+        printf("BNO08x 1 not detected at default I2C address. Check wiring. Freezing\n");
+        scan_i2c_bus();
+        sleep_ms(1000);
+    }
+
+    IMU.enableStepCounter();
+
 
     if (!IMU.enableGameRotationVector(100)) {
         printf("Failed to enable Game Rotation Vector!\n");
@@ -2240,6 +2273,8 @@ int main() {
     int stepDetector = 0;
     int pre_stepDetector = 0;
     vector<float> stepTime = {};
+    float stepCounter = 0.0f;
+    float pre_stepCounter = 0.0f;
 
     vector<vector<float>> toExportAngle;
     vector<vector<float>> toExportAccelG;
@@ -2269,12 +2304,19 @@ int main() {
 
             timeStamp = (time_us_64() / 1000.0f) - startTimeStamp; // Time in seconds
             //printf("timeStamp %f\n", timeStamp);
+
+            if (IMU.getSensorEventID() == SENSOR_REPORTID_STEP_COUNTER) {
+                stepCounter = IMU.getStepCount();
+
+                printf("Step Counter: %.2f\n", stepCounter);
+            }
+
             }
 
            // Store sensor data in vector
-            a_IMU = {accX, accY, accZ};
+            a_IMU = {accZ, accY, accX};
             //printf("a IMU X %f\n a IMU Y %f\n a IMU Z %f\n", a_IMU[0], a_IMU[1], a_IMU[2]);
-            w_IMU = {gyroX, gyroY, gyroY};
+            w_IMU = {gyroZ, gyroY, gyroX};
             //printf("w IMU X %f\n w IMU Y %f\n w IMU Z %f\n", w_IMU[0], w_IMU[1], w_IMU[2]);
             angle_IMU = {roll, pitch, yaw};
             //printf("Angle IMU X %f\n Angle IMU Y %f\n Angle IMU Z %f\n", angle_IMU[0], angle_IMU[1], angle_IMU[2]);
@@ -2316,9 +2358,11 @@ int main() {
             //printf("a hip X %f\n a hip Y %f\n a hip Z %f\n", a_hip[0], a_hip[1], a_hip[2]);
             //printf("v hip X %f\n v hip Y %f\n v hip Z %f\n", v_hip[0], v_hip[1], v_hip[2]);
 
-            stepDetector = detect_step_angle(angle_IMU, thresholdAngle);
+            //stepDetector = detect_step_angle(angle_IMU, thresholdAngle);
+            auto [stepEvent, timeEvent] = detect_step_pico(stepCounter, pre_stepCounter, timeStamp);
+            stepDetector = detect_step(stepEvent, timeEvent, timeStamp);
             stepTime = moment_of_step(stepDetector, pre_stepDetector, stepTime, timeStamp);
-            // printf("Step: %d\n", stepDetector);
+            printf("Step: %d\n", stepDetector);
 
             // Assign current value to previous value
             pre_angle_thigh = angle_thigh;
@@ -2327,6 +2371,7 @@ int main() {
             pre_v_shank = v_shank;
             pre_a_IMU = a_IMU;
             pre_stepDetector = stepDetector;
+            pre_stepCounter = stepCounter;
 
             // Calculate GRF
             GRF = calculate_grf(a_shank, a_thigh, a_hip, m);
