@@ -152,6 +152,22 @@ vector <float> crossProduct(vector <float> vect_A, vector <float> vect_B){
         }
         return adcbool;
     }
+
+    // Print function
+    void print_csv(const vector<float>& times, const vector<vector<float>>& GRFs, const vector<vector<float>>& accelerations, const vector<vector<float>>& gyros, const vector<vector<float>>& angles) {
+        // Print CSV header
+    
+        // Iterate through the data and print each row
+        for (size_t i = 0; i < times.size(); ++i) {
+
+            printf("%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n", 
+                    times[i],
+                    GRFs[i][0], GRFs[i][1], GRFs[i][2],
+                    accelerations[i][0], accelerations[i][1], accelerations[i][2],
+                    gyros[i][0], gyros[i][1], gyros[i][2],
+                    angles[i][0], angles[i][1], angles[i][2]);
+        }
+    } 
     
 int main() {
     stdio_init_all();
@@ -2239,6 +2255,13 @@ int main() {
     float stepCounter = 0.0f;
     float pre_stepCounter = 0.0f;
 
+    // Print CSV
+    vector<float> toExportTime;
+    vector<vector<float>> toExportGRF;
+    vector<vector<float>> toExportAcc;
+    vector<vector<float>> toExportGyro;
+    vector<vector<float>> toExportAngle;
+
     while (true) 
     {
         // Read sensor data
@@ -2247,25 +2270,20 @@ int main() {
             yaw = IMU.getGameYaw();
             pitch = IMU.getGamePitch();
             roll = IMU.getRoll();
-            //printf("Roll X %f\n Pitch Y %f\n Yaw Z %f\n", roll, pitch, yaw);
+
 
             accX = IMU.getLinAccelX();
             accY = IMU.getLinAccelY();
             accZ = IMU.getLinAccelZ();
-            //printf("Acc X IMU %f\n Acc Y IMU %f\n Acc Z IMU %f\n", accX, accY, accZ);
 
             gyroX = IMU.getGyroX();
             gyroY = IMU.getGyroY();
             gyroZ = IMU.getGyroZ();
-            //printf("w X IMU %f\n w Y IMU %f\n w Z IMU %f\n", gyroX, gyroY, gyroZ);
 
             timeStamp = (time_us_64() / 1000.0f) - startTimeStamp; // Time in seconds
-            //printf("timeStamp %f\n", timeStamp);
 
             if (IMU.getSensorEventID() == SENSOR_REPORTID_STEP_COUNTER) {
                 stepCounter = IMU.getStepCount();
-
-                printf("Step Counter: %.2f\n", stepCounter);
             }
 
             }
@@ -2317,15 +2335,34 @@ int main() {
 
             // Calculate GRF
             GRF = calculate_grf(a_shank, a_thigh, a_hip, m);
-            // printf("GRF X %f\n GRF Y %f\n GRF Z %f\n", GRF[0], GRF[1], GRF[2]);
 
-            // Return GRF, timestamp and step
+            // Return GRF, timestamp, stepDetector timeEvent for transmission
 
             // Hidde's step detector
             adcresult = adc_read();
 
             adcbool = ADCthreshold(adcresult, conversion_factor);
-            //printf("Raw value: 0x%03x, voltage: %f V bool: %s\n", adcresult, adcresult * conversion_factor, adcbool ? "true" : "false");
+
+            // Export data to CSV
+            toExportTime.emplace_back(timeStamp);
+            toExportGRF.emplace_back(GRF);
+            toExportAcc.emplace_back(a_IMU);
+            toExportGyro.emplace_back(w_IMU);
+            toExportAngle.emplace_back(angle_IMU);
+            
+
+            if (toExportTime.size() >= 100) {
+                print_csv(toExportTime, toExportGRF, toExportAcc, toExportGyro, toExportAngle);
+                toExportTime.clear();
+                toExportGRF.clear();
+                toExportAcc.clear();
+                toExportGyro.clear();
+                toExportAngle.clear();
+            }
+
+            if (timeStamp >= 500.0f * 1000.0f) { // Stop after 10 seconds
+                break; // When testing it did not restart
+            }
 
         sleep_ms(5);  // Sleep 5 mili sec until next sample to be taken
         } 
