@@ -1,6 +1,8 @@
 add_library(BNO08x_Pico_Library STATIC
         src/bno08x.cpp
         src/utils.cpp
+        src/bno08x2.cpp
+        src/utils2.cpp
 )
 add_subdirectory(
 	sh2

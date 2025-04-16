@@ -99,7 +99,7 @@ while (true) {
 
     if (IMU.getSensorEvent() == true) {
         if (IMU.getSensorEventID() == SENSOR_REPORTID_ROTATION_VECTOR) {
-            yaw = IMU.getyaw();
+            yaw = IMU.getYaw();
         }
     }
 

@@ -3,6 +3,10 @@ add_library(sh2 STATIC
         src/shtp.c
         src/sh2_util.c
         src/sh2_SensorValue.c
+        src/sh22.c
+        src/shtp2.c
+        src/sh2_util2.c
+        src/sh2_SensorValue2.c
 )
 target_include_directories(sh2 PUBLIC
         include

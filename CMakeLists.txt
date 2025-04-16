@@ -28,44 +28,48 @@ set(PICO_BOARD pico2_w CACHE STRING "Board type")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(raspicodething_rat C CXX ASM)
-
-set(PICO_CXX_ENABLE_EXCEPTIONS 1)
+project(main C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
+file(GLOB SRC_FILES ${CMAKE_CURRENT_LIST_DIR}/src/*.c ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
-add_executable(GRF GRF.cpp )
+add_executable(main ${SRC_FILES})
 
-pico_set_program_name(GRF "GRF.cpp") 
-pico_set_program_version(GRF "0.1")
+pico_set_program_name(main "main")
+pico_set_program_version(main "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(GRF 0)
-pico_enable_stdio_usb(GRF 1)
-
-# Add the standard library to the build
-target_link_libraries(GRF
-        pico_stdlib
-        hardware_adc)
-
-# Add the standard include files to the build
-target_include_directories(GRF PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}
-)
+pico_enable_stdio_uart(main 0)
+pico_enable_stdio_usb(main 1)
 
 add_subdirectory(
-    BNO08x_Pico_Library
+	BNO08x_Pico_Library
 )
 
 
+# Add the standard library to the build
+target_link_libraries(main
+        pico_stdlib)
+
+# Add the standard include files to the build
+target_include_directories(main PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/include
+)
+
 # Add any user requested libraries
-target_link_libraries(GRF 
-        pico_cyw43_arch_none
-        BNO08x_Pico_Library
+target_link_libraries(main 
+    pico_stdlib
+    pico_btstack_classic
+    pico_btstack_cyw43
+    pico_cyw43_arch_none
+    BNO08x_Pico_Library
+    hardware_adc
         )
 
-pico_add_extra_outputs(GRF)
-
+pico_add_extra_outputs(main)
+# Disable DTR check for USB CDC connection
+add_definitions(-DPICO_STDIO_USB_CONNECTION_WITHOUT_DTR=1)

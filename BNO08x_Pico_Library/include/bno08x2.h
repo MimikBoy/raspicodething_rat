@@ -1,5 +1,5 @@
 /*
-  This is a library written for the BNO08x
+  This is a library written for the BNO08x2
   SparkFun sells these at its website: www.sparkfun.com
   Do you like this library? Help support SparkFun. Buy a board!
   https://www.sparkfun.com/products/14686
@@ -10,9 +10,9 @@
   CEVA Sensor Hub Driver, found here:
   https://github.com/ceva-dsp/sh2
 
-  Also, utilizing code from the Adafruit BNO08x Arduino Library by Bryan Siepert 
+  Also, utilizing code from the Adafruit BNO08x2 Arduino Library by Bryan Siepert 
   for Adafruit Industries. Found here:
-  https://github.com/adafruit/Adafruit_BNO08x
+  https://github.com/adafruit/Adafruit_BNO08x2
 
   Also, utilizing I2C and SPI read/write functions and code from the Adafruit 
   BusIO library found here:
@@ -20,36 +20,36 @@
 
   Ported by Mark Mellors for use on an RP2040
 
-  The BNO08x IMU is a powerful triple axis gyro/accel/magnetometer coupled with an ARM processor
+  The BNO08x2 IMU is a powerful triple axis gyro/accel/magnetometer coupled with an ARM processor
   to maintain and complete all the complex calculations for various VR, inertial, step counting,
   and movement operations.
 
-  This library handles the initialization of the BNO08x and is able to query the sensor
+  This library handles the initialization of the BNO08x2 and is able to query the sensor
   for different readings.
 
-  https://github.com/sparkfun/SparkFun_BNO08x_Arduino_Library
+  https://github.com/sparkfun/SparkFun_BNO08x2_Arduino_Library
 
   SparkFun code, firmware, and software is released under the MIT License.
   Please see LICENSE.md for further details.
 
-  Some of this library was based off of the Adafruit BNO08x Arduino Library.
+  Some of this library was based off of the Adafruit BNO08x2 Arduino Library.
   More specifically, the code layers connecting to the HillCrest/Ceva Driver.
   Their original work can be found here:
-  https://github.com/adafruit/Adafruit_BNO08x
+  https://github.com/adafruit/Adafruit_BNO08x2
   Thank you Adafruit and your developers for all your hard work put into your Library!
 */
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "sh2.h"
-#include "sh2_SensorValue.h"
-#include "sh2_err.h"
+#include "sh22.h"
+#include "sh2_SensorValue2.h"
+#include "sh2_err2.h"
 #include "hardware/i2c.h"
 
 #pragma once
 
 
-//The default I2C address for the BNO08x on the SparkFun breakout is 0x4B. 0x4A is also possible.
-#define BNO08x_DEFAULT_ADDRESS 0x4B
+//The default I2C address for the BNO08x2 on the SparkFun breakout is 0x4B. 0x4A is also possible.
+#define BNO08x2_DEFAULT_ADDRESS 0x4B
 
 //Platform specific configurations
 
@@ -69,86 +69,86 @@
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 
-//All the ways we can configure or talk to the BNO08x, figure 34, page 36 reference manual
+//All the ways we can configure or talk to the BNO08x2, figure 34, page 36 reference manual
 //These are used for low level communication with the sensor, on channel 2
-#define SHTP_REPORT_COMMAND_RESPONSE 0xF1
-#define SHTP_REPORT_COMMAND_REQUEST 0xF2
-#define SHTP_REPORT_FRS_READ_RESPONSE 0xF3
-#define SHTP_REPORT_FRS_READ_REQUEST 0xF4
-#define SHTP_REPORT_PRODUCT_ID_RESPONSE 0xF8
-#define SHTP_REPORT_PRODUCT_ID_REQUEST 0xF9
-#define SHTP_REPORT_BASE_TIMESTAMP 0xFB
-#define SHTP_REPORT_SET_FEATURE_COMMAND 0xFD
+#define SHTP_REPORT_COMMAND_RESPONSE_2 0xF1
+#define SHTP_REPORT_COMMAND_REQUEST_2 0xF2
+#define SHTP_REPORT_FRS_READ_RESPONSE_2 0xF3
+#define SHTP_REPORT_FRS_READ_REQUEST_2 0xF4
+#define SHTP_REPORT_PRODUCT_ID_RESPONSE_2 0xF8
+#define SHTP_REPORT_PRODUCT_ID_REQUEST_2 0xF9
+#define SHTP_REPORT_BASE_TIMESTAMP_2 0xFB
+#define SHTP_REPORT_SET_FEATURE_COMMAND_2 0xFD
 
 //All the different sensors and features we can get reports from
 //These are used when enabling a given sensor
-#define SENSOR_REPORTID_ACCELEROMETER SH2_ACCELEROMETER
-#define SENSOR_REPORTID_GYROSCOPE_CALIBRATED SH2_GYROSCOPE_CALIBRATED
-#define SENSOR_REPORTID_MAGNETIC_FIELD SH2_MAGNETIC_FIELD_CALIBRATED
-#define SENSOR_REPORTID_LINEAR_ACCELERATION SH2_LINEAR_ACCELERATION
-#define SENSOR_REPORTID_ROTATION_VECTOR SH2_ROTATION_VECTOR
-#define SENSOR_REPORTID_GRAVITY SH2_GRAVITY
-#define SENSOR_REPORTID_UNCALIBRATED_GYRO SH2_GYROSCOPE_UNCALIBRATED
-#define SENSOR_REPORTID_GAME_ROTATION_VECTOR 0x08
-#define SENSOR_REPORTID_GEOMAGNETIC_ROTATION_VECTOR 0x09
-#define SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR SH2_GYRO_INTEGRATED_RV
-#define SENSOR_REPORTID_TAP_DETECTOR 0x10
-#define SENSOR_REPORTID_STEP_COUNTER SH2_STEP_COUNTER
-#define SENSOR_REPORTID_STABILITY_CLASSIFIER SH2_STABILITY_CLASSIFIER
-#define SENSOR_REPORTID_RAW_ACCELEROMETER 0x14
-#define SENSOR_REPORTID_RAW_GYROSCOPE 0x15
-#define SENSOR_REPORTID_RAW_MAGNETOMETER 0x16
-#define SENSOR_REPORTID_PERSONAL_ACTIVITY_CLASSIFIER SH2_PERSONAL_ACTIVITY_CLASSIFIER
-#define SENSOR_REPORTID_AR_VR_STABILIZED_ROTATION_VECTOR 0x28
-#define SENSOR_REPORTID_AR_VR_STABILIZED_GAME_ROTATION_VECTOR 0x29
+#define SENSOR_REPORTID_ACCELEROMETER_2 SH2_ACCELEROMETER_2
+#define SENSOR_REPORTID_GYROSCOPE_CALIBRATED_2 SH2_GYROSCOPE_CALIBRATED_2
+#define SENSOR_REPORTID_MAGNETIC_FIELD_2 SH2_MAGNETIC_FIELD_CALIBRATED_2
+#define SENSOR_REPORTID_LINEAR_ACCELERATION_2 SH2_LINEAR_ACCELERATION_2
+#define SENSOR_REPORTID_ROTATION_VECTOR_2 SH2_ROTATION_VECTOR_2
+#define SENSOR_REPORTID_GRAVITY_2 SH2_GRAVITY_2
+#define SENSOR_REPORTID_UNCALIBRATED_GYRO_2 SH2_GYROSCOPE_UNCALIBRATED_2
+#define SENSOR_REPORTID_GAME_ROTATION_VECTOR_2 0x08
+#define SENSOR_REPORTID_GEOMAGNETIC_ROTATION_VECTOR_2 0x09
+#define SENSOR_REPORTID_GYRO_INTEGRATED_ROTATION_VECTOR_2 SH2_GYRO_INTEGRATED_RV_2
+#define SENSOR_REPORTID_TAP_DETECTOR_2 0x10
+#define SENSOR_REPORTID_STEP_COUNTER_2 SH2_STEP_COUNTER_2
+#define SENSOR_REPORTID_STABILITY_CLASSIFIER_2 SH2_STABILITY_CLASSIFIER_2
+#define SENSOR_REPORTID_RAW_ACCELEROMETER_2 0x14
+#define SENSOR_REPORTID_RAW_GYROSCOPE_2 0x15
+#define SENSOR_REPORTID_RAW_MAGNETOMETER_2 0x16
+#define SENSOR_REPORTID_PERSONAL_ACTIVITY_CLASSIFIER_2 SH2_PERSONAL_ACTIVITY_CLASSIFIER_2
+#define SENSOR_REPORTID_AR_VR_STABILIZED_ROTATION_VECTOR_2 0x28
+#define SENSOR_REPORTID_AR_VR_STABILIZED_GAME_ROTATION_VECTOR_2 0x29
 
-// Reset complete packet (BNO08X Datasheet p.24 Figure 1-27)
-#define EXECUTABLE_RESET_COMPLETE 0x1
+// Reset complete packet (BNO08x2 Datasheet p.24 Figure 1-27)
+#define EXECUTABLE_RESET_COMPLETE_2 0x1
 
 //Command IDs from section 6.4, page 42
 //These are used to calibrate, initialize, set orientation, tare etc the sensor
-#define COMMAND_ERRORS 1
-#define COMMAND_COUNTER 2
-#define COMMAND_TARE 3
-#define COMMAND_INITIALIZE 4
-#define COMMAND_DCD 6
-#define COMMAND_ME_CALIBRATE 7
-#define COMMAND_DCD_PERIOD_SAVE 9
-#define COMMAND_OSCILLATOR 10
-#define COMMAND_CLEAR_DCD 11
+#define COMMAND_ERRORS_2 1
+#define COMMAND_COUNTER_2 2
+#define COMMAND_TARE_2 3
+#define COMMAND_INITIALIZE_2 4
+#define COMMAND_DCD_2 6
+#define COMMAND_ME_CALIBRATE_2 7
+#define COMMAND_DCD_PERIOD_SAVE_2 9
+#define COMMAND_OSCILLATOR_2 10
+#define COMMAND_CLEAR_DCD_2 11
 
-#define CALIBRATE_ACCEL 0
-#define CALIBRATE_GYRO 1
-#define CALIBRATE_MAG 2
-#define CALIBRATE_PLANAR_ACCEL 3
-#define CALIBRATE_ACCEL_GYRO_MAG 4
-#define CALIBRATE_STOP 5
+#define CALIBRATE_ACCEL_2 0
+#define CALIBRATE_GYRO_2 1
+#define CALIBRATE_MAG_2 2
+#define CALIBRATE_PLANAR_ACCEL_2 3
+#define CALIBRATE_ACCEL_GYRO_MAG_2 4
+#define CALIBRATE_STOP_2 5
 
-#define TARE_AXIS_ALL 0x07
-#define TARE_AXIS_Z   0x04
+#define TARE_AXIS_ALL_2 0x07
+#define TARE_AXIS_Z_2   0x04
 
-#define TARE_ROTATION_VECTOR 0
-#define TARE_GAME_ROTATION_VECTOR 1
-#define TARE_GEOMAGNETIC_ROTATION_VECTOR 2
-#define TARE_GYRO_INTEGRATED_ROTATION_VECTOR 3
-#define TARE_AR_VR_STABILIZED_ROTATION_VECTOR 4
-#define TARE_AR_VR_STABILIZED_GAME_ROTATION_VECTOR 5
+#define TARE_ROTATION_VECTOR_2 0
+#define TARE_GAME_ROTATION_VECTOR_2 1
+#define TARE_GEOMAGNETIC_ROTATION_VECTOR_2 2
+#define TARE_GYRO_INTEGRATED_ROTATION_VECTOR_2 3
+#define TARE_AR_VR_STABILIZED_ROTATION_VECTOR_2 4
+#define TARE_AR_VR_STABILIZED_GAME_ROTATION_VECTOR_2 5
 
-class BNO08x
+class BNO08x2
 {
 public:
-	bool begin(uint8_t deviceAddress = BNO08x_DEFAULT_ADDRESS, i2c_inst_t* i2c_port = i2c_default); //By default use the default I2C addres, and use Wire port
+	bool begin(uint8_t deviceAddress = BNO08x2_DEFAULT_ADDRESS, i2c_inst_t* i2c_port = i2c_default); //By default use the default I2C addres, and use Wire port
 	bool isConnected();
 
-    sh2_ProductIds_t prodIds; ///< The product IDs returned by the sensor
-	sh2_SensorValue_t sensorValue;
+    sh2_ProductIds_t_2 prodIds; ///< The product IDs returned by the sensor
+	sh2_SensorValue_t_2 sensorValue;
 
     void hardwareReset(void);
     bool wasReset(void); //Returns true if the sensor has reported a reset. Reading this will unflag the reset.
 
 	uint8_t getResetReason(); // returns prodIds->resetCause
 
-    bool enableReport(sh2_SensorId_t sensor, uint32_t interval_us = 10000, uint32_t sensorSpecific = 0);
+    bool enableReport(sh2_SensorId_t_2 sensor, uint32_t interval_us = 10000, uint32_t sensorSpecific = 0);
     bool getSensorEvent();
 	uint8_t getSensorEventID();
 
@@ -243,7 +243,7 @@ public:
 	bool setCalibrationConfig(uint8_t sensors);
 	bool saveCalibration();
 
-	bool tareNow(bool zAxis=false, sh2_TareBasis_t basis=SH2_TARE_BASIS_ROTATION_VECTOR);
+	bool tareNow(bool zAxis=false, sh2_TareBasis_t_2 basis=SH2_TARE_BASIS_ROTATION_VECTOR_2);
 	bool saveTare();
 	bool clearTare();
 	
@@ -268,9 +268,7 @@ public:
 
 	float getRoll();
 	float getPitch();
-	float getGamePitch();
 	float getYaw();
-	float getGameYaw();
 
 //	void sendCommand(uint8_t command);
 //	void sendCalibrateCommand(uint8_t thingToCalibrate);
@@ -329,5 +327,5 @@ private:
 
 protected:
 	virtual bool _init(int32_t sensor_id = 0);
-	sh2_Hal_t _HAL; ///< The struct representing the SH2 Hardware Abstraction Layer
+	sh2_Hal_t_2 _HAL; ///< The struct representing the SH2 Hardware Abstraction Layer
 };

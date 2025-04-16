@@ -18,6 +18,18 @@ namespace CONFIG {
 
 }
 
+namespace CONFIG2 {
+
+    inline uint I2C_TIMEOUT_US = 5000;
+
+    constexpr uint I2C_BAUD_RATE = 350 * 1000; // 350kHz
+    constexpr uint I2C_SDA_PIN = 2; // GP4 pin 4;
+    constexpr uint I2C_SCL_PIN = 3; // GP5 pin 5;
+
+    constexpr uint8_t BNO08X_ADDR = 0x4B;
+
+}
+
 void initI2C(i2c_inst_t* &i2c_port, bool force_recovery);
 
 void handleI2CError(i2c_inst_t* &i2c_port);
